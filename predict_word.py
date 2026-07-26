@@ -1,7 +1,8 @@
-"""Segment a word image into individual characters and classify each with best_bengali_vit.pth.
+"""Segment a word image into individual characters and classify each with a trained checkpoint.
 
 Usage:
     python predict_word.py path/to/word.png
+    python predict_word.py path/to/word.png --model checkpoints/resnet18_merged.pth
     python predict_word.py path/to/word.png --save-viz out.png
 """
 import argparse
@@ -18,7 +19,7 @@ MIN_CHAR_WIDTH = 4  # ponytail: drops noise blobs narrower than this; shrink if 
 
 def load_model(checkpoint_path, device="cpu"):
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
-    arch = ckpt.get("arch", "resnet18")  # older checkpoints (best_bengali_vit.pth, best_merged_model.pth) predate this field
+    arch = ckpt.get("arch", "resnet18")  # older checkpoints (resnet18_ras_only.pth, resnet18_merged.pth) predate this field
 
     if arch == "extended_vit":
         from train_merged import ExtendedViT  # lazy import: only needed for this architecture
@@ -153,10 +154,10 @@ def build_transform(img_size):
     ])
 
 
-def predict_word(image_path, checkpoint_path="best_bengali_vit.pth", save_viz=None, min_conf=0.5):
+def predict_word(image_path, checkpoint_path="checkpoints/resnet18_ras_only.pth", save_viz=None, min_conf=0.5):
     """min_conf gates low-confidence predictions to "?" instead of a forced label.
 
-    ponytail: the model only knows 119 compound-character classes (see class_mapping.csv) —
+    ponytail: the model only knows 119 compound-character classes (see ras_class_mapping.csv) —
     it has never seen plain consonants, vowels, vowel signs, or digits. On a "general" word
     it WILL confidently mislabel any character outside that vocabulary as the nearest-looking
     conjunct, because softmax always picks something. This threshold just stops silently wrong
@@ -213,7 +214,7 @@ def _selftest():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("image", nargs="?", help="path to a word image to classify")
-    parser.add_argument("--model", default="best_bengali_vit.pth")
+    parser.add_argument("--model", default="checkpoints/resnet18_ras_only.pth")
     parser.add_argument("--save-viz", default=None, help="save an annotated copy with detected boxes")
     parser.add_argument("--min-conf", type=float, default=0.5, help="below this softmax confidence, print '?' instead of a guess")
     parser.add_argument("--selftest", action="store_true", help="run the built-in segmentation check and exit")

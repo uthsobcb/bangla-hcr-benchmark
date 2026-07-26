@@ -4,9 +4,9 @@ Run:
     python train_merged.py                  # full run, defaults below
     python train_merged.py --epochs 8 --batch-size 32 --resume
 
-Saves best_merged_model.pth (same schema as best_bengali_vit.pth: state_dict,
+Saves resnet18_merged.pth (same schema as resnet18_ras_only.pth: state_dict,
 class_names, display_names, img_size) so predict_word.py works unchanged with
-`--model best_merged_model.pth`.
+`--model checkpoints/resnet18_merged.pth`.
 """
 import argparse
 import csv
@@ -27,11 +27,13 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import models, transforms
 
 ROOT = Path(__file__).parent
+DATA = ROOT / "data"
+CHECKPOINTS = ROOT / "checkpoints"
 IMG_SIZE = 224
 SEED = 42
-OLD_CHECKPOINT = ROOT / "best_bengali_vit.pth"
-BEST_CHECKPOINT = ROOT / "best_merged_model.pth"
-LAST_CHECKPOINT = ROOT / "merged_last.pth"
+OLD_CHECKPOINT = CHECKPOINTS / "resnet18_ras_only.pth"
+BEST_CHECKPOINT = CHECKPOINTS / "resnet18_merged.pth"
+LAST_CHECKPOINT = CHECKPOINTS / "resnet18_merged_last.pth"
 
 
 def norm(s):
@@ -50,25 +52,25 @@ def load_mapping(csv_path, key_col, val_col):
 
 def build_manifest():
     """Scan all 3 datasets on disk, return [(path, class_idx), ...] and the sorted class list."""
-    ras_map = load_mapping(ROOT / "class_mapping.csv", "class_id", "bengali_character")
-    ekush_map = load_mapping(ROOT / "ekush-dataset" / "metaData_img.csv", "Folder Name", "Char Name")
-    matri_map = load_mapping(ROOT / "matrivasha_mapping_draft.csv", "folder", "character")
+    ras_map = load_mapping(ROOT / "ras_class_mapping.csv", "class_id", "bengali_character")
+    ekush_map = load_mapping(DATA / "ekush-dataset" / "metaData_img.csv", "Folder Name", "Char Name")
+    matri_map = load_mapping(ROOT / "matrivasha_mapping.csv", "folder", "character")
 
     classes = sorted(set(ras_map.values()) | set(ekush_map.values()) | set(matri_map.values()))
     class_to_idx = {c: i for i, c in enumerate(classes)}
 
     samples = []
     for split in ("train", "test"):
-        base = ROOT / "RAS-Compound-character-dataset" / split
+        base = DATA / "RAS-Compound-character-dataset" / split
         for class_id, char in ras_map.items():
             samples += [(str(p), class_to_idx[char]) for p in (base / class_id).glob("*.png")]
 
-    ekush_base = ROOT / "ekush-dataset"
+    ekush_base = DATA / "ekush-dataset"
     for folder, char in ekush_map.items():
         samples += [(str(p), class_to_idx[char]) for p in (ekush_base / folder).glob("*.jpg")]
 
     for gender_dir in ("male", "feamale"):
-        base = ROOT / "MatriVasha_Dataset" / gender_dir
+        base = DATA / "MatriVasha_Dataset" / gender_dir
         for folder, char in matri_map.items():
             samples += [(str(p), class_to_idx[char]) for p in (base / folder).glob("*.jpg")]
 
@@ -221,7 +223,7 @@ class ExtendedViT(nn.Module):
 
 def build_extended_vit(num_classes, device, warm_start_from=BEST_CHECKPOINT):
     """ExtendedViT with its CNN backbone warm-started from a plain-resnet18 checkpoint
-    (e.g. best_merged_model.pth) — matched by parameter name/shape, same pattern as
+    (e.g. resnet18_merged.pth) — matched by parameter name/shape, same pattern as
     build_model(). The transformer/cls/pos_embed parts always start fresh."""
     model = ExtendedViT(num_classes, pretrained=not (warm_start_from and Path(warm_start_from).exists()))
 
@@ -268,7 +270,7 @@ def main():
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--limit-per-class", type=int, default=None, help="cap samples/class before splitting")
     parser.add_argument("--workers", type=int, default=min(8, os.cpu_count() or 4))
-    parser.add_argument("--resume", action="store_true", help="continue from merged_last.pth")
+    parser.add_argument("--resume", action="store_true", help="continue from resnet18_merged_last.pth")
     args = parser.parse_args()
 
     device = pick_device()

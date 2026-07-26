@@ -5,8 +5,8 @@ Run:
     python train_extended_vit.py                 # full run, defaults below
     python train_extended_vit.py --epochs 8 --resume
 
-Saves best_extended_vit.pth (same schema as best_merged_model.pth, plus an "arch" field)
-so predict_word.py works unchanged with `--model best_extended_vit.pth`.
+Saves extended_vit_merged.pth (same schema as resnet18_merged.pth, plus an "arch" field)
+so predict_word.py works unchanged with `--model checkpoints/extended_vit_merged.pth`.
 """
 import argparse
 import os
@@ -27,8 +27,8 @@ from train_merged import (
 )
 
 ROOT = Path(__file__).parent
-BEST_CHECKPOINT = ROOT / "best_extended_vit.pth"
-LAST_CHECKPOINT = ROOT / "extended_vit_last.pth"
+BEST_CHECKPOINT = ROOT / "checkpoints" / "extended_vit_merged.pth"
+LAST_CHECKPOINT = ROOT / "checkpoints" / "extended_vit_merged_last.pth"
 ARCH = "extended_vit"
 
 
@@ -39,7 +39,7 @@ def main():
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--limit-per-class", type=int, default=None, help="cap samples/class before splitting")
     parser.add_argument("--workers", type=int, default=min(8, os.cpu_count() or 4))
-    parser.add_argument("--resume", action="store_true", help="continue from extended_vit_last.pth")
+    parser.add_argument("--resume", action="store_true", help="continue from extended_vit_merged_last.pth")
     args = parser.parse_args()
 
     device = pick_device()
