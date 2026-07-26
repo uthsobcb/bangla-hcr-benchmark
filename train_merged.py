@@ -168,6 +168,77 @@ def build_model(num_classes, device):
     return model.to(device)
 
 
+class ExtendedViT(nn.Module):
+    """ResNet18 conv backbone as a tokenizer, feeding a Transformer encoder — the 'hybrid
+    ViT' pattern from the original ViT paper's appendix. A 224x224 input produces a 7x7x512
+    feature map from ResNet18's layer4; that's flattened into 49 tokens (dim 512), a
+    learnable [CLS] token is prepended, learnable positional embeddings are added, then a
+    few Transformer encoder layers run self-attention over the 50 tokens. Classification
+    reads off the [CLS] token.
+
+    ponytail: single global feature map as tokens, not real image patches — cheap (only
+    one CNN forward + a tiny transformer over 50 tokens, not 197), which matters since
+    this has to run inference on CPU. A true patch-based hybrid would replace layer3/layer4
+    with a shallower backbone and more transformer depth if capacity turns out to matter.
+    """
+
+    NUM_PATCHES = 49  # 7x7 from a 224x224 input through resnet18's layer4
+    EMBED_DIM = 512  # resnet18 layer4 output channels
+
+    def __init__(self, num_classes, num_layers=4, nhead=8, dim_feedforward=2048, dropout=0.1, pretrained=True):
+        super().__init__()
+        resnet = models.resnet18(weights="IMAGENET1K_V1" if pretrained else None)
+        self.conv1, self.bn1, self.relu, self.maxpool = resnet.conv1, resnet.bn1, resnet.relu, resnet.maxpool
+        self.layer1, self.layer2, self.layer3, self.layer4 = resnet.layer1, resnet.layer2, resnet.layer3, resnet.layer4
+
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, self.EMBED_DIM))
+        self.pos_embed = nn.Parameter(torch.zeros(1, self.NUM_PATCHES + 1, self.EMBED_DIM))
+        nn.init.trunc_normal_(self.cls_token, std=0.02)
+        nn.init.trunc_normal_(self.pos_embed, std=0.02)
+
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=self.EMBED_DIM, nhead=nhead, dim_feedforward=dim_feedforward,
+            dropout=dropout, batch_first=True,
+        )
+        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        self.norm = nn.LayerNorm(self.EMBED_DIM)
+        self.head = nn.Linear(self.EMBED_DIM, num_classes)
+
+    def forward_backbone(self, x):
+        x = self.maxpool(self.relu(self.bn1(self.conv1(x))))
+        x = self.layer4(self.layer3(self.layer2(self.layer1(x))))
+        return x  # (B, 512, 7, 7)
+
+    def forward(self, x):
+        feat = self.forward_backbone(x)
+        b = feat.shape[0]
+        tokens = feat.flatten(2).transpose(1, 2)  # (B, 49, 512)
+        tokens = torch.cat([self.cls_token.expand(b, -1, -1), tokens], dim=1)  # (B, 50, 512)
+        tokens = tokens + self.pos_embed
+        encoded = self.transformer(tokens)
+        return self.head(self.norm(encoded[:, 0]))
+
+
+def build_extended_vit(num_classes, device, warm_start_from=BEST_CHECKPOINT):
+    """ExtendedViT with its CNN backbone warm-started from a plain-resnet18 checkpoint
+    (e.g. best_merged_model.pth) — matched by parameter name/shape, same pattern as
+    build_model(). The transformer/cls/pos_embed parts always start fresh."""
+    model = ExtendedViT(num_classes, pretrained=not (warm_start_from and Path(warm_start_from).exists()))
+
+    if warm_start_from and Path(warm_start_from).exists():
+        old = torch.load(warm_start_from, map_location="cpu", weights_only=False)
+        old_sd, new_sd = old["state_dict"], model.state_dict()
+        matched = 0
+        for k in new_sd:
+            if k in old_sd and old_sd[k].shape == new_sd[k].shape:
+                new_sd[k] = old_sd[k]
+                matched += 1
+        model.load_state_dict(new_sd)
+        print(f"Warm-started {matched}/{len(new_sd)} tensors from {Path(warm_start_from).name}")
+
+    return model.to(device)
+
+
 def run_epoch(model, loader, device, criterion, optimizer=None):
     train_mode = optimizer is not None
     model.train() if train_mode else model.eval()
