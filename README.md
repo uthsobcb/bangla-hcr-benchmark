@@ -1,0 +1,93 @@
+# Bengali character recognition — 4-method comparison
+
+Four architectures trained on a merged 256-class set (RAS-Compound + Ekush + MatriVasha,
+681,309 images), evaluated on one shared held-out split.
+
+| method | what it is |
+|---|---|
+| `cnn` | from-scratch separable-conv net (62K params) — the no-pretraining baseline |
+| `resnet18` | ImageNet-pretrained ResNet18, fine-tuned (11.3M) |
+| `vit` | ImageNet-pretrained ViT-Base/16 via timm, fine-tuned (86.3M) |
+| `extended_vit` | hybrid: ResNet18 backbone tokenizes into a Transformer encoder (23.9M) |
+
+## Setup
+
+```bash
+python3 -m venv venv && ./venv/bin/pip install -r requirements.txt
+```
+
+Datasets are not in git. Expected layout:
+
+```
+data/
+  RAS-Compound-character-dataset/{train,test}/<class_id>/*.png
+  ekush-dataset/{<folder>/*.jpg, metaData_img.csv}
+  MatriVasha_Dataset/{male,feamale}/<folder>/*.jpg
+```
+
+Folder→character maps: `ras_class_mapping.csv`, `matrivasha_mapping.csv`, and Ekush's own
+`metaData_img.csv`. Characters are NFC-normalized and unioned into 256 classes, so the same
+character from different datasets collapses to one label.
+
+## Train
+
+```bash
+./venv/bin/python train_arch.py --arch cnn           # full data, 8 epochs
+./venv/bin/python train_arch.py --arch vit --limit-per-class 300
+./venv/bin/python train_arch.py --arch extended_vit --resume
+```
+
+Every arch shares `train_merged.py`'s manifest, transforms, and seed-42 stratified split, so
+the train/val/test sets are byte-identical across methods and the numbers are comparable.
+
+- `--limit-per-class N` caps samples per class **before** splitting and writes to
+  `checkpoints/{arch}_merged_lpcN.pth`, so a capped comparison never overwrites full-data runs.
+- `--resume` continues from `{arch}_merged*_last.pth`. A fresh run refuses to overwrite an
+  existing best checkpoint — pass `--force` if you really mean to retrain from scratch.
+- `--lr` overrides the per-arch default (ViT-Base needs 1e-4; 3e-4 diverges).
+
+Rough cost on an M-series Mac (MPS), 8 epochs:
+
+| | full 681K | capped 300/class |
+|---|---|---|
+| cnn | ~3 h | ~15 min |
+| resnet18 | ~6 h | ~1 h |
+| extended_vit | ~10–13 h | ~1.5 h |
+| vit | ~70 h | ~7.5 h |
+
+## Evaluate
+
+```bash
+./venv/bin/python evaluate.py                                    # every full-data checkpoint
+./venv/bin/python evaluate.py --limit-per-class 300 --confusion  # the capped 4-way table
+./venv/bin/python evaluate.py --arch cnn vit --per-class
+```
+
+Scores every checkpoint on the same test split and writes `results.csv`: accuracy, CER,
+macro-F1, params, checkpoint size, single-image CPU latency, and **per-source accuracy**
+(RAS / Ekush / MatriVasha) — the column that shows whether merging helped or just averaged.
+
+CER equals top-1 error here: one label per image, single characters.
+
+`--confusion` writes `confusion_{arch}.png`; `--per-class` prints sklearn's per-class report.
+
+## Predict a word
+
+```bash
+./venv/bin/python predict_word.py word.png --model checkpoints/extended_vit_merged.pth
+./venv/bin/python predict_word.py --selftest
+```
+
+Segments a word by vertical ink projection (splitting on the শিরোরেখা when the profile shows
+one blob), classifies each crop, and gates sub-threshold predictions to `?` via `--min-conf`.
+Loads any of the four architectures from the checkpoint's `arch` field. Always CPU.
+
+## Files
+
+| file | role |
+|---|---|
+| `train_merged.py` | data pipeline: manifest, split, transforms, train loop, `ExtendedViT` |
+| `train_arch.py` | `--arch` CLI for all four methods + checkpoint-loading builders |
+| `evaluate.py` | shared-split scoring → `results.csv` |
+| `predict_word.py` | word segmentation + inference |
+| `notebooks/archive-*.ipynb` | original single-dataset (RAS-only) experiments |

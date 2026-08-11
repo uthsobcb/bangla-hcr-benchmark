@@ -4,3 +4,6 @@ __pycache__/
 .claude
 data/
 checkpoints/
+logs/
+results*.csv
+confusion_*.png

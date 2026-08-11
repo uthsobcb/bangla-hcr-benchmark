@@ -11,7 +11,7 @@ import sys
 import numpy as np
 import torch
 from PIL import Image, ImageDraw
-from torchvision import models, transforms
+from torchvision import transforms
 
 IMG_SIZE = 224
 MIN_CHAR_WIDTH = 4  # ponytail: drops noise blobs narrower than this; shrink if thin conjuncts get dropped
@@ -19,15 +19,9 @@ MIN_CHAR_WIDTH = 4  # ponytail: drops noise blobs narrower than this; shrink if 
 
 def load_model(checkpoint_path, device="cpu"):
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
-    arch = ckpt.get("arch", "resnet18")  # older checkpoints (resnet18_ras_only.pth, resnet18_merged.pth) predate this field
+    from train_arch import build_for_eval  # lazy: pulls in torchvision/timm only when loading
 
-    if arch == "extended_vit":
-        from train_merged import ExtendedViT  # lazy import: only needed for this architecture
-        model = ExtendedViT(len(ckpt["class_names"]), pretrained=False)
-    else:
-        model = models.resnet18(weights=None)
-        model.fc = torch.nn.Linear(model.fc.in_features, len(ckpt["class_names"]))
-
+    model = build_for_eval(ckpt)  # handles all 4 archs; pre-`arch` checkpoints are resnet18
     model.load_state_dict(ckpt["state_dict"])
     model.eval().to(device)
     return model, ckpt["display_names"]
