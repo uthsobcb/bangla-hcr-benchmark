@@ -65,6 +65,7 @@ def main():
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--limit-per-class", type=int, default=None, help="must match training")
+    parser.add_argument("--suffix", default="", help="extra checkpoint-name suffix, e.g. _imagenet")
     parser.add_argument("--per-class", action="store_true", help="print sklearn classification_report")
     parser.add_argument("--confusion", action="store_true", help="write confusion_{arch}.png")
     parser.add_argument("--out", default="results.csv")
@@ -72,7 +73,7 @@ def main():
 
     # Same naming rule as train_arch.py: --limit-per-class 300 scores the capped run,
     # no flag scores the full-data run.
-    tag = f"_lpc{args.limit_per_class}" if args.limit_per_class else ""
+    tag = (f"_lpc{args.limit_per_class}" if args.limit_per_class else "") + args.suffix
     ckpt_of = lambda a: CHECKPOINTS / f"{a}_merged{tag}.pth"
 
     archs = args.arch or [a for a in EVAL_BUILDERS if ckpt_of(a).exists()]

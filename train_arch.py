@@ -88,28 +88,29 @@ def _split_params(model, backbone_attr):
     return backbone, [p for p in model.parameters() if id(p) not in ids]
 
 
-# build(num_classes, device) -> model ; groups(model, lr) -> AdamW param groups ; default lr
+# build(num_classes, device, args) -> model ; groups(model, lr) -> AdamW param groups ; default lr
 ARCHS = {
     "cnn": dict(
         lr=1e-3,
-        build=lambda n, d: SmallCNN(n).to(d),
+        build=lambda n, d, a: SmallCNN(n).to(d),
         groups=lambda m, lr: [{"params": m.parameters(), "lr": lr}],
     ),
     "resnet18": dict(
         lr=3e-4,
-        build=lambda n, d: build_model(n, d),
+        build=lambda n, d, a: build_model(n, d),
         groups=lambda m, lr: [{"params": list(m.parameters())[:-2], "lr": lr * 0.1},
                               {"params": m.fc.parameters(), "lr": lr}],
     ),
     "vit": dict(
         lr=1e-4,  # full ViT-Base fine-tune diverges at 3e-4
-        build=lambda n, d: PureViT(n).to(d),
+        build=lambda n, d, a: PureViT(n).to(d),
         groups=lambda m, lr: [{"params": m.vit.parameters(), "lr": lr * 0.1},
                               {"params": m.classifier.parameters(), "lr": lr}],
     ),
     "extended_vit": dict(
         lr=3e-4,
-        build=lambda n, d: build_extended_vit(n, d, warm_start_from=RESNET_CHECKPOINT),
+        build=lambda n, d, a: build_extended_vit(
+            n, d, warm_start_from=None if a.no_warm_start else RESNET_CHECKPOINT),
         groups=lambda m, lr: [
             {"params": [p for a in ("conv1", "bn1", "layer1", "layer2", "layer3", "layer4")
                         for p in getattr(m, a).parameters()], "lr": lr * 0.1},
@@ -152,6 +153,9 @@ def main():
     parser.add_argument("--workers", type=int, default=min(8, os.cpu_count() or 4))
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--force", action="store_true", help="allow overwriting an existing best checkpoint")
+    parser.add_argument("--no-warm-start", action="store_true",
+                        help="extended_vit only: initialise the backbone from ImageNet rather than "
+                             "the merged resnet18 checkpoint, so a capped run sees no full-data weights")
     args = parser.parse_args()
 
     spec = ARCHS[args.arch]
@@ -159,6 +163,7 @@ def main():
     # Capped runs get their own filenames so a controlled comparison never overwrites
     # the full-data checkpoints (and the condition is readable off the filename).
     tag = f"_lpc{args.limit_per_class}" if args.limit_per_class else ""
+    tag += "_imagenet" if args.no_warm_start else ""
     best_ckpt = CHECKPOINTS / f"{args.arch}_merged{tag}.pth"
     last_ckpt = CHECKPOINTS / f"{args.arch}_merged{tag}_last.pth"
     CHECKPOINTS.mkdir(exist_ok=True)
@@ -186,7 +191,7 @@ def main():
     val_loader = loader(val_samples, eval_tf, False)
     test_loader = loader(test_samples, eval_tf, False)
 
-    model = spec["build"](len(classes), device)
+    model = spec["build"](len(classes), device, args)
     print(f"Total params: {sum(p.numel() for p in model.parameters()):,}")
 
     criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
