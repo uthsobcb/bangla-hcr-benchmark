@@ -211,13 +211,21 @@ samples, and the remaining 27 fall off a cliff to fewer than 100 (Figure 2a). Th
 the classes contributed uniquely by RAS-Compound, whose 7,830 images spread across 119 classes
 average only 66 per class.
 
-This structure is a direct consequence of how the corpus was assembled, and it shapes what the
-benchmark measures. Because the large sources contribute abundant samples and the small source
-contributes the rare classes, aggregate accuracy is dominated by the well-populated body while
-macro-averaged F1 is disproportionately sensitive to the 27-class tail. We report both for this
-reason. The tail is also the part of the label space most representative of the real difficulty
-identified in the compound-character literature [23], [24], [37], where rare conjuncts are precisely
-the classes for which data cannot readily be collected.
+**The imbalance is an artifact of source size, not of character frequency.** Each corpus is
+internally near-balanced: within Ekush, per-class counts run from 514 to 4,067 with an interquartile
+range of just 3,056–3,079; within MatriVasha, 2,548–2,563; within RAS-Compound, a uniform 34–70. The
+bimodality in Figure 2(a) therefore arises entirely from RAS-Compound being a small collection
+(≈67 images per class) whose 27 unique classes no other corpus supplies — not from those conjuncts
+being intrinsically rarer in written Bengali.
+
+This distinction matters for interpreting any per-class result. Because class rarity and source
+identity are perfectly confounded in this corpus — every low-frequency class is a RAS-Compound class,
+and RAS-Compound has a distinctive image convention (high-resolution, cleanly binarised) — a model
+that performs better on rare classes cannot be shown to handle *rarity* better rather than simply
+handling *that corpus's image style* better. We therefore do not claim rare-class advantage for any
+architecture, and we report macro-averaged F1 alongside accuracy as a descriptive statistic rather
+than as evidence about the long tail. Establishing genuine data-efficiency behaviour requires
+controlled subsampling within a single source (Section 7).
 
 ### 3.3 Preprocessing and Data Splitting
 

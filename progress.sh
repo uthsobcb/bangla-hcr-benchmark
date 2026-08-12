@@ -5,7 +5,7 @@ cd ${0:A:h}
 show() {
   print "=== $(date '+%H:%M:%S') ==="
   for f in logs/*.log(N); do
-    [[ ${f:t} == (run_*|dashboard.log) ]] && continue
+    [[ ${f:t} == (run_*|dashboard.log|finalize.log) ]] && continue
     line=$(grep -E "Epoch \[|Test Accuracy" $f 2>/dev/null | tail -1)
     printf "%-16s %s\n" "${f:t:r}" "${line:-(starting)}"
   done

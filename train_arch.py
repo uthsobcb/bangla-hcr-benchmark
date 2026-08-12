@@ -142,6 +142,24 @@ def build_for_eval(ckpt):
     return EVAL_BUILDERS[ckpt.get("arch", "resnet18")](len(ckpt["class_names"]))
 
 
+SOURCE_DIRS = {"ras": "RAS-Compound-character-dataset", "ekush": "ekush-dataset",
+               "matrivasha": "MatriVasha_Dataset"}
+
+
+def restrict_to_source(samples, classes, source):
+    """Keep one corpus and relabel to just the classes it contains.
+
+    For the data-efficiency sweep: within a single source the image convention is constant and
+    per-class counts are near-uniform, so per-class budget is the only variable. Labels are
+    remapped to a contiguous range, making it a self-contained N-class task at every budget.
+    """
+    key = SOURCE_DIRS[source]
+    kept = [(p, l) for p, l in samples if key in p]
+    present = sorted({l for _, l in kept})
+    remap = {old: i for i, old in enumerate(present)}
+    return [(p, remap[l]) for p, l in kept], [classes[i] for i in present]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -156,13 +174,16 @@ def main():
     parser.add_argument("--no-warm-start", action="store_true",
                         help="extended_vit only: initialise the backbone from ImageNet rather than "
                              "the merged resnet18 checkpoint, so a capped run sees no full-data weights")
+    parser.add_argument("--source", choices=list(SOURCE_DIRS), default=None,
+                        help="restrict to one corpus and relabel to its classes only")
     args = parser.parse_args()
 
     spec = ARCHS[args.arch]
     lr = args.lr if args.lr is not None else spec["lr"]
     # Capped runs get their own filenames so a controlled comparison never overwrites
     # the full-data checkpoints (and the condition is readable off the filename).
-    tag = f"_lpc{args.limit_per_class}" if args.limit_per_class else ""
+    tag = f"_{args.source}" if args.source else ""
+    tag += f"_lpc{args.limit_per_class}" if args.limit_per_class else ""
     tag += "_imagenet" if args.no_warm_start else ""
     best_ckpt = CHECKPOINTS / f"{args.arch}_merged{tag}.pth"
     last_ckpt = CHECKPOINTS / f"{args.arch}_merged{tag}_last.pth"
@@ -180,6 +201,9 @@ def main():
     t0 = time.time()
     samples, classes = build_manifest()
     print(f"{len(samples)} images, {len(classes)} classes, scanned in {time.time()-t0:.1f}s")
+    if args.source:
+        samples, classes = restrict_to_source(samples, classes, args.source)
+        print(f"Restricted to {args.source}: {len(samples)} images, {len(classes)} classes")
 
     train_samples, val_samples, test_samples = stratified_split(samples, limit_per_class=args.limit_per_class)
     print(f"Train {len(train_samples)} | Val {len(val_samples)} | Test {len(test_samples)}")

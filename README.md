@@ -82,6 +82,27 @@ Segments a word by vertical ink projection (splitting on the শিরোরে�
 one blob), classifies each crop, and gates sub-threshold predictions to `?` via `--min-conf`.
 Loads any of the four architectures from the checkpoint's `arch` field. Always CPU.
 
+## Paper
+
+`paper/draft.md` is the manuscript. Figures and notebooks regenerate from the saved
+checkpoints and logs:
+
+```bash
+./venv/bin/python paper/figures.py           # all 9 figures -> paper/*.png
+./venv/bin/python paper/make_notebooks.py    # build + execute notebooks 01-03
+./venv/bin/python paper/make_notebooks.py 01 --no-exec   # build one, don't run it
+```
+
+The notebooks are the archival record — they re-run the analysis against saved checkpoints and
+logs and keep every output inline, which the plain scripts do not. Training itself stays in
+`train_arch.py`; the notebooks never retrain.
+
+| notebook | contents |
+|---|---|
+| `01-dataset-analysis.ipynb` | label reconciliation, per-source composition, imbalance, Figs 2/4/5 |
+| `02-training-and-results.ipynb` | full training logs, results tables, Figs 6/7/9, confusion matrices |
+| `03-attention-and-inference.ipynb` | architecture trace, CLS attention (Fig 8), CPU latency |
+
 ## Files
 
 | file | role |
@@ -90,4 +111,7 @@ Loads any of the four architectures from the checkpoint's `arch` field. Always C
 | `train_arch.py` | `--arch` CLI for all four methods + checkpoint-loading builders |
 | `evaluate.py` | shared-split scoring → `results.csv` |
 | `predict_word.py` | word segmentation + inference |
+| `dashboard.py` / `progress.sh` | live training status |
+| `paper/figures.py` | all paper figures |
+| `paper/make_notebooks.py` | builds and executes the notebooks above |
 | `notebooks/archive-*.ipynb` | original single-dataset (RAS-only) experiments |

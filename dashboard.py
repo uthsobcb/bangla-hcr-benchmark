@@ -24,7 +24,9 @@ GROUPS = [
      "the controlled 4-way comparison; ViT can't do full data in under 3 days",
      [("cnn", "cnn", "cnn_merged_lpc300.pth"),
       ("resnet18", "resnet18", "resnet18_merged_lpc300.pth"),
-      ("extended_vit", "extended_vit", "extended_vit_merged_lpc300.pth"),
+      ("extended_vit (warm-started)", "extended_vit", "extended_vit_merged_lpc300.pth"),
+      ("extended_vit (ImageNet init)", "extended_vit_imagenet",
+       "extended_vit_merged_lpc300_imagenet.pth"),
       ("vit", "vit", "vit_merged_lpc300.pth")]),
     ("Full data — all 681,309 images",
      "the headline numbers; pure ViT omitted (~70h)",
@@ -73,8 +75,12 @@ def running_arch():
         if "train_arch.py" not in line:
             continue
         m = re.search(r"--arch (\w+)", line)
-        if m:
-            return m.group(1) if "--limit-per-class" in line else f"{m.group(1)}_full"
+        if not m:
+            continue
+        arch = m.group(1)
+        if "--no-warm-start" in line:
+            return f"{arch}_imagenet"
+        return arch if "--limit-per-class" in line else f"{arch}_full"
     return None
 
 
