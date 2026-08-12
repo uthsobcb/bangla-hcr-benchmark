@@ -587,10 +587,58 @@ def fig10_data_efficiency_sweep():
     plt.close(fig)
 
 
+def fig11_cross_source():
+    """Same-corpus validation against cross-corpus test, for the classes each pair shares."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import pandas as pd
+
+    f = OUT.parent / "cross_source_results.csv"
+    if not f.exists():
+        raise FileNotFoundError(f)
+    df = pd.read_csv(f)
+    df["pair"] = df["train_src"] + " → " + df["test_src"]
+    pairs = list(dict.fromkeys(df["pair"]))
+
+    fig, ax = plt.subplots(figsize=(9.5, 4.4))
+    x = np.arange(len(pairs))
+    same = [df[df.pair == p]["same_source_val"].mean() for p in pairs]
+    cross = [df[df.pair == p]["cross_source_test"].mean() for p in pairs]
+    chance = [1 / df[df.pair == p]["shared_classes"].iloc[0] for p in pairs]
+
+    ax.bar(x - .2, same, .38, color="#4C72B0", label="Same-corpus validation")
+    ax.bar(x + .2, cross, .38, color="#C44E52", label="Cross-corpus test")
+    # both architectures land in the same place; show them so that isn't taken on trust
+    for dx, col in ((-.2, "same_source_val"), (.2, "cross_source_test")):
+        for i, p in enumerate(pairs):
+            ax.scatter([i + dx] * len(df[df.pair == p]), df[df.pair == p][col],
+                       s=14, color="white", edgecolor="#333", lw=.7, zorder=4)
+    for i, (c, v) in enumerate(zip(chance, cross)):
+        ax.plot([i + .01, i + .39], [c, c], color="#333", ls=":", lw=1.2,
+                label="Chance" if i == 0 else None)
+        ax.text(i + .2, v + .035, f"{v:.3f}", ha="center", fontsize=8.5, color="#C44E52")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([p.replace(" → ", "\n→ ") for p in pairs], fontsize=9)
+    ax.set_ylabel("Accuracy")
+    ax.set_ylim(0, 1.12)
+    ax.set_title("Cross-corpus generalisation collapses to chance — shared classes only",
+                 fontsize=11, loc="left")
+    ax.legend(fontsize=9, frameon=False, ncol=3, loc="upper center")
+    ax.grid(axis="y", alpha=.25, lw=.6)
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+    fig.tight_layout()
+    fig.savefig(OUT / "fig11_cross_source.png", dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     for fn in (fig1_workflow, fig2_dataset, fig3_architecture, fig4_samples,
                fig5_preprocessing, fig6_training_curves, fig7_results, fig8_attention,
-               fig9_efficiency, fig10_data_efficiency_sweep):
+               fig9_efficiency, fig10_data_efficiency_sweep, fig11_cross_source):
         try:
             fn()
             print(f"{fn.__name__}: ok")

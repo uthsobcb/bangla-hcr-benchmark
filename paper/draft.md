@@ -1,24 +1,25 @@
-# A Unified 256-Class Bengali Compound-Character Benchmark: Four Architectures and the Calibration Gap Accuracy Hides
+# Single-Corpus Accuracy Overstates Bengali Compound-Character Recognition: A Unified 256-Class Benchmark and Four Architectures
 
 **Status of this draft.** All experiments are complete and every number below is measured. Fields
 marked `[FILL]` need information only the authors have (affiliations, funding, licences, venue).
 
-**Note on the revision.** This draft was restructured to lead with the benchmark and carry the
-architecture result inside it. An earlier version claimed a data-efficiency advantage in accuracy;
-that claim came from runs whose backbones had inherited previously trained Bengali weights, and it
-survived neither the corrected initialisation nor seed repetition. The supported architecture claim
-is about calibration, and it is reported alongside the negative accuracy result.
+**Note on the revision.** Restructured to lead with the benchmark and the cross-corpus finding,
+carrying the architecture result inside them. An earlier version claimed a data-efficiency advantage
+in accuracy; that claim came from runs whose backbones had inherited previously trained Bengali
+weights, and survived neither the corrected initialisation nor seed repetition. The supported
+architecture claim is about calibration, reported alongside the negative accuracy result.
 
 ---
 
 ## Title Page
 
-**Title.** A Unified 256-Class Bengali Compound-Character Benchmark: Four Architectures and the
-Calibration Gap Accuracy Hides
+**Title.** Single-Corpus Accuracy Overstates Bengali Compound-Character Recognition: A Unified
+256-Class Benchmark and Four Architectures
 
-*Alternatives:* (a) A Unified Bengali Compound-Character Benchmark and What Four Architectures
-Reveal About It; (b) Better-Calibrated Bengali Compound-Character Recognition with a Hybrid
-CNN–Transformer — use (b) only if the venue rewards architecture over resource contributions.
+*Alternatives:* (a) A Unified 256-Class Bengali Compound-Character Benchmark: Cross-Corpus
+Generalisation Fails at Chance — blunter, and the finding is strong enough to carry it;
+(b) Better-Calibrated Bengali Compound-Character Recognition with a Hybrid CNN–Transformer — only
+if the venue rewards architecture contributions over resource-and-analysis ones.
 
 **Authors.** Uthsob Chakraborty`[FILL: full author list and order]`
 
@@ -28,8 +29,8 @@ CNN–Transformer — use (b) only if the venue rewards architecture over resour
 
 **ORCID.** `[FILL]`
 
-**Keywords.** Bengali handwritten character recognition; compound characters (যুক্তাক্ষর); Vision
-Transformer; hybrid CNN–Transformer; transfer learning; data efficiency; low-resource script
+**Keywords.** Bengali handwritten character recognition; compound characters (যুক্তাক্ষর); cross-corpus
+generalisation; domain shift; benchmark; Vision Transformer; hybrid CNN–Transformer; model calibration
 
 ---
 
@@ -39,9 +40,9 @@ Transformer; hybrid CNN–Transformer; transfer learning; data efficiency; low-r
 venue's limit.)*
 
 - A 256-class, 681,309-image Bengali benchmark unifying three corpora by Unicode grapheme
-- Four architectures benchmarked under one protocol; ViT-B/16 leads at an equal data budget
-- Accuracy separates no architecture, but calibration error differs two-fold
-- A hybrid CNN–Transformer halves ResNet18's calibration error at every data budget
+- Models transfer across corpora at chance: 0.97 same-corpus, 0.03 cross-corpus
+- Single-corpus accuracy measures corpus familiarity, not character recognition
+- A hybrid CNN–Transformer halves ResNet18's calibration error; accuracy is unchanged
 - Warm-starting from a prior checkpoint inflated our own result by 1.43 points
 
 ---
@@ -70,7 +71,15 @@ tokenizes the image into 49 tokens for a four-layer Transformer encoder. ViT-B/1
 data budget (0.9662); on the full corpus ResNet18 and ExtendedViT are indistinguishable (0.9764 vs
 0.9760, 27 images in 68,010).
 
-Accuracy separates these architectures barely at all, which makes what it conceals the more
+The benchmark's most consequential result concerns none of these architectures individually. Trained
+on one constituent corpus and tested on another, restricted to the classes they share, every model
+falls from 0.96–1.00 same-corpus accuracy to 0.02–0.05 cross-corpus — at or barely above chance, in
+both directions, for both architectures. We verify this is domain shift rather than label
+disagreement. Single-corpus accuracy therefore measures familiarity with a corpus's rendering
+conventions rather than recognition of Bengali characters, which recasts merging as domain coverage
+rather than dataset enlargement.
+
+Accuracy separates the architectures barely at all, which makes what it conceals the more
 interesting result. A controlled single-corpus sweep over per-class budgets from 50 to 1,000,
 repeated across three seeds, finds no significant accuracy difference at any budget — yet
 ExtendedViT approximately halves ResNet18's expected calibration error throughout (0.106 vs 0.245 at
@@ -120,8 +129,10 @@ remaining three measurable.
 dataset-local folder indices (Section 3.2). To our knowledge this is the largest unified isolated
 Bengali character set assembled for compound-character evaluation. We characterise it rather than
 merely assembling it: its imbalance is an artifact of source size rather than character frequency
-(Section 3.2), and we measure cross-corpus generalisation to establish what merging buys
-(Section 5.5).
+(Section 3.2), and — our most consequential finding — models trained on any one constituent corpus
+transfer to another **at chance** (Section 5.5). No single Bengali corpus supports a model that
+generalises, which recasts merging as domain coverage rather than dataset enlargement and casts
+doubt on single-corpus accuracies reported throughout the literature.
 
 **Four architectures under one protocol.** A from-scratch CNN, a fine-tuned ImageNet ResNet18, a
 fine-tuned ViT-B/16, and our hybrid, all trained and evaluated on a byte-identical split at two
@@ -543,16 +554,48 @@ only, since a Bengali checkpoint would leak the target corpus into the source mo
 
 **Table 7. Cross-corpus generalisation (300 images per class, shared classes only).**
 
-| Architecture | Train → Test | Shared classes | Same-corpus val | Cross-corpus test | Gap |
-|---|---|---:|---:|---:|---:|
-| `[TODO — running; fills from cross_source_results.csv]` | | | | | |
+| Architecture | Train → Test | Shared | Same-corpus val | Cross-corpus test | Chance | Gap |
+|---|---|---:|---:|---:|---:|---:|
+| ResNet18 | MatriVasha → RAS | 58 | 0.9678 | 0.0317 | 0.017 | 0.936 |
+| ExtendedViT | MatriVasha → RAS | 58 | 0.9632 | 0.0375 | 0.017 | 0.926 |
+| ResNet18 | RAS → MatriVasha | 58 | 0.9915 | 0.0268 | 0.017 | 0.965 |
+| ExtendedViT | RAS → MatriVasha | 58 | 0.9887 | 0.0254 | 0.017 | 0.963 |
+| ResNet18 | Ekush → RAS | 37 | 0.9658 | 0.0514 | 0.027 | 0.914 |
+| ExtendedViT | Ekush → RAS | 37 | 0.9604 | 0.0547 | 0.027 | 0.906 |
+| ResNet18 | RAS → Ekush | 37 | 1.0000 | 0.0418 | 0.027 | 0.958 |
+| ExtendedViT | RAS → Ekush | 37 | 1.0000 | 0.0205 | 0.027 | 0.980 |
 
-The gap between same-corpus validation and cross-corpus test accuracy quantifies how much of a
-model's apparent competence is convention-specific. A small gap would indicate that the
-preprocessing (Section 3.3) successfully abstracts away collection differences and that merging
-yields genuinely transferable representations; a large one would indicate that a merged-corpus
-accuracy figure overstates what the model would achieve on newly collected data — an important
-caveat for anyone adopting this benchmark.
+**Generalisation across corpora collapses to chance.** Every model scores 0.96–1.00 on its own
+corpus's held-out split and 0.021–0.055 on another corpus's images of *the same characters* — between
+0.8× and 2.0× the chance rate of a 37- or 58-way classifier. The result holds in both directions,
+for both architectures, and across both corpus pairs. Figure 11 (`fig11_cross_source.png`) plots it.
+
+**This is not a labelling artifact.** Near-chance transfer would follow trivially if the corpora's
+class mappings disagreed, which would also invalidate the merged benchmark. We tested this directly:
+the merged full-corpus model classifies RAS-Compound's shared-class test samples at 0.9921 and
+MatriVasha's at 0.9800. Both corpora's renderings of a class map to the same label correctly, so the
+grapheme-level reconciliation of Section 3.2 is sound and the collapse reflects genuine domain shift.
+
+**What this means.** A model trained on a single Bengali corpus does not learn to recognise Bengali
+compound characters; it learns to recognise one project's rendering of them — its resolution, its
+binarisation, its ink polarity, its writer population. The 97.6% our merged model achieves across all
+three corpora is attainable only because it saw all three in training. It is not evidence of a
+general character recogniser, and neither, by extension, are the near-ceiling accuracies the
+literature reports on individual corpora [11], [12], [17], [23]: those numbers describe within-corpus
+competence and may substantially overstate performance on newly collected handwriting.
+
+The finding reframes what merging is for. Merging is usually motivated as enlarging the training set;
+here it is better understood as **covering domains**, since no single corpus yields a model that
+transfers to another. It also identifies the concrete gap the field should target — domain-invariant
+representations for handwritten Bengali — which the preprocessing of Section 3.3 evidently does not
+achieve, despite normalising polarity and scale.
+
+**Caveats.** Training was capped at 300 images per class; larger budgets might narrow the gap,
+though the effect size makes it implausible that they close it. The two RAS-trained rows reach
+1.0000 same-corpus validation, which suggests unusually low intra-class variation in that corpus and
+inflates the gap for those directions specifically. And each pair is a single run, though the
+consistency across eight runs and four directions makes seed variance an unlikely explanation for an
+effect of this magnitude.
 
 ### 5.6 Inference Cost
 
@@ -651,7 +694,15 @@ failure mode [17], [23].
 
 ## 6. Discussion
 
-**What the results do not support.** We set out expecting the hybrid to be more accurate than a
+**The dominant effect is the corpus, not the architecture.** Section 5.5 puts the architecture
+comparison in proportion. Every difference between architectures reported in this paper is at most
+a few accuracy points; the difference between evaluating within a corpus and across corpora is
+ninety. Any conclusion about which architecture is best for Bengali compound characters is therefore
+conditional on a fixed collection convention, and would need re-establishing on data collected
+differently. We state this before discussing the architecture results, because it bounds how much
+weight they can carry.
+
+**What the architecture results do not support.** We set out expecting the hybrid to be more accurate than a
 convolutional baseline when data is limited. It is not. Across a controlled sweep with the sole
 variable being per-class budget, and with three seeds at the two smallest budgets, no accuracy
 difference reaches significance; at the two largest budgets ResNet18 is fractionally ahead. We
@@ -728,11 +779,25 @@ with source identity (Section 3.2), we make no claim about rare-class behaviour.
 
 We unified three Bengali handwriting corpora into a 256-class, 681,309-image benchmark by
 reconciling labels at the level of Unicode-normalised graphemes, and used it to evaluate four
-architectures under an identical protocol. ExtendedViT — an ImageNet-pretrained ResNet18 acting as a
-learned tokenizer for a four-layer Transformer encoder — matches a fine-tuned ResNet18 on the full
-corpus (0.9760 vs 0.9764) and, in a controlled single-corpus sweep across per-class budgets from 50
-to 1,000 with three seeds at the smallest budgets, shows **no significant accuracy advantage at any
-budget**. The hypothesis that motivated the architecture is not supported in top-1 terms.
+architectures under an identical protocol.
+
+The benchmark's principal finding is negative and, we believe, consequential for the field. Trained
+on any one constituent corpus and tested on another — restricted to the classes they share, so the
+label space is identical on both sides — every architecture falls from 0.96–1.00 same-corpus accuracy
+to 0.02–0.05 cross-corpus, at or barely above chance. We verified that this reflects domain shift
+rather than label disagreement, since the merged model classifies both corpora's renderings of a
+shared class correctly (0.9921 and 0.9800). A model trained on one Bengali corpus therefore does not
+learn to recognise Bengali compound characters; it learns to recognise that project's rendering of
+them. Single-corpus accuracies — including the near-ceiling figures widely reported in this
+literature — describe within-corpus competence and should not be read as evidence of generalisation.
+Merging corpora is best understood not as enlarging a training set but as covering domains.
+
+Against that backdrop, architecture differences are small. ExtendedViT — an ImageNet-pretrained
+ResNet18 acting as a learned tokenizer for a four-layer Transformer encoder — matches a fine-tuned
+ResNet18 on the full corpus (0.9760 vs 0.9764) and, in a controlled single-corpus sweep across
+per-class budgets from 50 to 1,000 with three seeds at the smallest budgets, shows **no significant
+accuracy advantage at any budget**. The hypothesis that motivated the architecture is not supported
+in top-1 terms.
 
 The encoder's measurable contribution is to the model's probability estimates. ExtendedViT
 approximately halves ResNet18's expected calibration error at every budget (0.106 vs 0.245 at 50
@@ -749,11 +814,18 @@ minority source learnable at all. And the corpus's apparent long tail is an arti
 rather than of character frequency, since each constituent corpus is internally near-balanced; we
 therefore caution against interpreting per-class results on it as evidence about rare conjuncts.
 
-Future work should test whether the calibration advantage survives at word level, where the
-posterior actually feeds a decoder; replicate the sweep without label smoothing and on a second
-corpus to establish that the effect is not convention-specific; and examine whether it can be
-obtained more cheaply — for instance by post-hoc temperature scaling of the convolutional baseline,
-which would determine whether the encoder is necessary for the effect or merely sufficient.
+Future work follows directly from the cross-corpus result. The field needs domain-invariant
+representations for handwritten Bengali: our preprocessing normalises polarity and scale and is
+plainly insufficient, so stronger domain generalisation — adversarial or style-invariant training,
+heavy style augmentation, or test-time adaptation — is the obvious next target, and cross-corpus
+accuracy is the metric that should report progress on it. We would also encourage the field to
+adopt held-out-corpus evaluation as standard practice alongside within-corpus splits, since the two
+measure very different things.
+
+On the architecture side, the calibration advantage should be tested at word level where the
+posterior actually feeds a decoder, replicated without label smoothing and on a second corpus, and
+compared against post-hoc temperature scaling of the convolutional baseline — which would establish
+whether the encoder is necessary for the effect or merely sufficient.
 
 ---
 
