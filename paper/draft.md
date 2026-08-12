@@ -1,4 +1,4 @@
-# Single-Corpus Accuracy Overstates Bengali Compound-Character Recognition: A Unified 256-Class Benchmark and Four Architectures
+# Single-Corpus Accuracy Overstates Bengali Compound-Character Recognition: A Unified 256-Class Benchmark and Cross-Corpus Evaluation
 
 **Status of this draft.** All experiments are complete and every number below is measured. Fields
 marked `[FILL]` need information only the authors have (affiliations, funding, licences, venue).
@@ -14,12 +14,14 @@ architecture claim is about calibration, reported alongside the negative accurac
 ## Title Page
 
 **Title.** Single-Corpus Accuracy Overstates Bengali Compound-Character Recognition: A Unified
-256-Class Benchmark and Four Architectures
+256-Class Benchmark and Cross-Corpus Evaluation
 
-*Alternatives:* (a) A Unified 256-Class Bengali Compound-Character Benchmark: Cross-Corpus
-Generalisation Fails at Chance — blunter, and the finding is strong enough to carry it;
-(b) Better-Calibrated Bengali Compound-Character Recognition with a Hybrid CNN–Transformer — only
-if the venue rewards architecture contributions over resource-and-analysis ones.
+*Alternatives:* (a) Cross-Corpus Generalisation Fails at Chance on Bengali Compound Characters —
+blunter, and the finding carries it; (b) A Unified 256-Class Bengali Compound-Character Benchmark
+with Cross-Corpus Baselines — leads with the resource if the venue is dataset-oriented.
+
+*Rejected:* any title foregrounding the four-architecture comparison. The architectures differ by
+at most one accuracy point, and naming them promises a contribution the results do not deliver.
 
 **Authors.** Uthsob Chakraborty`[FILL: full author list and order]`
 
@@ -42,8 +44,8 @@ venue's limit.)*
 - A 256-class, 681,309-image Bengali benchmark unifying three corpora by Unicode grapheme
 - Models transfer across corpora at chance: 0.97 same-corpus, 0.03 cross-corpus
 - Single-corpus accuracy measures corpus familiarity, not character recognition
-- A hybrid CNN–Transformer halves ResNet18's calibration error; accuracy is unchanged
-- Warm-starting from a prior checkpoint inflated our own result by 1.43 points
+- Four architectures compared; none separates on accuracy once initialisation is controlled
+- Apparent calibration gaps between architectures vanish under temperature scaling
 
 ---
 
@@ -79,15 +81,16 @@ disagreement. Single-corpus accuracy therefore measures familiarity with a corpu
 conventions rather than recognition of Bengali characters, which recasts merging as domain coverage
 rather than dataset enlargement.
 
-Accuracy separates the architectures barely at all, which makes what it conceals the more
-interesting result. A controlled single-corpus sweep over per-class budgets from 50 to 1,000,
-repeated across three seeds, finds no significant accuracy difference at any budget — yet
-ExtendedViT approximately halves ResNet18's expected calibration error throughout (0.106 vs 0.245 at
-50 images per class, t > 17), most markedly where data is scarcest. Since downstream word-level
-decoding consumes probabilities rather than argmax labels, this carries practical value independent
-of top-1 accuracy, and ExtendedViT delivers it at 17 ms CPU inference, 3.3× faster than ViT-B/16. We
-further report that warm-starting from a previously trained checkpoint — routine practice — inflated
-our own equal-budget result by 1.43 points before we controlled for it.
+The architectures themselves separate remarkably little. A controlled single-corpus sweep over
+per-class budgets from 50 to 1,000, repeated across three seeds, finds no significant accuracy
+difference between a convolutional baseline and a CNN–Transformer hybrid at any budget. The hybrid
+does show roughly half the baseline's expected calibration error — but temperature scaling, a single
+fitted scalar, removes that difference entirely and leaves the scaled baseline better calibrated
+than the unscaled hybrid, so it is not an architectural property. We report three further
+methodological cautions arising from this benchmark: warm-starting from a previously trained
+checkpoint, routine practice in this literature, inflated our own result by 1.43 accuracy points;
+macro-F1 does not measure long-tail performance when class rarity is confounded with source; and
+uncorrected calibration comparisons between architectures should not be trusted.
 
 ---
 
@@ -141,27 +144,85 @@ ordering Parvez et al. [17] reported for basic characters. Without pretraining, 
 accuracy on the minority corpus that supplies 27 otherwise-unavailable classes — on a merged corpus
 of unequal sources, transfer learning is what makes the minority source learnable at all.
 
-**A hybrid architecture, and a calibration finding.** We propose ExtendedViT, which uses an
+**A hybrid architecture, evaluated and not sustained.** We include ExtendedViT, which uses an
 ImageNet-pretrained ResNet18 as a learned tokenizer feeding a Transformer encoder (Section 3.4). A
 controlled single-corpus sweep over per-class budgets from 50 to 1,000, repeated across seeds, finds
-**no significant accuracy advantage at any budget** — but a roughly two-fold reduction in expected
-calibration error at every budget, largest where data is scarcest. We report the negative accuracy
-result as prominently as the positive calibration one.
+**no significant accuracy advantage at any budget**; an apparent two-fold calibration advantage
+proves fully correctable by temperature scaling and is therefore not architectural (Section 5.4). We
+report it as a baseline rather than a contribution. Its one durable property is efficiency: 17 ms
+single-image CPU inference against ViT-B/16's 56 ms, for roughly one accuracy point less.
 
-**A methodological caution.** Both pretrained baselines initially inherited previously trained
-Bengali weights, a routine practice that inflated our own equal-budget result by 1.43 accuracy
-points and moved first-epoch validation accuracy from 0.234 to 0.703. We quantify the effect and
-report every controlled result from ImageNet initialisation alone (Section 5.8).
+**Three methodological cautions,** each found by attempting to falsify a claim of our own.
+*Initialisation:* both pretrained baselines inherited previously trained Bengali weights, routine
+practice that inflated our equal-budget result by 1.43 points and moved first-epoch validation
+accuracy from 0.234 to 0.703 (Section 5.8). *Macro-F1:* on this corpus the rarest classes score the
+**highest** F1, because rarity is confounded with source image quality, so macro-F1 does not measure
+long-tail performance (Section 5.10). *Calibration:* architecture-level ECE differences are
+correctable post hoc and should always be reported temperature-scaled (Section 5.4).
 
 ---
 
 ## 2. Literature Review
 
 > Insert the existing standalone review here (Sections 2.1–2.10 of
-> `Literature_Review_Bengali_ViT_Compound_Characters.docx`). It already covers classical approaches,
-> CNN-based methods, ViT and transformer approaches, compound-character-specific work, ImageNet
-> transfer learning, benchmark datasets (Table 2.1), reported accuracies (Table 2.2), and the six
-> research gaps. No rewriting needed; the numbering below assumes it occupies Section 2.
+> `Literature_Review_Bengali_ViT_Compound_Characters.docx`), **plus the new subsection 2.7 drafted
+> below**, renumbering the existing 2.7–2.10 to 2.8–2.11. The existing review covers classical
+> approaches, CNN methods, ViT and transformer approaches, compound-character work, ImageNet
+> transfer learning, benchmark datasets, reported accuracies, and the research gaps. It contains no
+> coverage of cross-dataset evaluation or domain generalisation, which is now this paper's central
+> finding — hence the addition.
+
+### 2.7 Cross-Dataset Evaluation and Domain Generalisation *(new subsection to insert)*
+
+> **Drafting note.** Citations marked ⚑ are not in the existing numbered scheme and must be added to
+> the reference list. Verify each against the source before submission; the claims attributed to them
+> are standard in the domain-generalisation literature but the specific numbers should be checked.
+
+A recurring feature of the Bangla HCR literature is that models are trained and evaluated **within**
+a single corpus, with the train/test split drawn from the same collection. Reported accuracies
+therefore describe within-corpus competence. Several studies do report results across multiple
+benchmarks — BanglaNet [35] across CMATERdb, BanglaLekha-Isolated and Ekush; CompoundDenseNet [23]
+across the same three, at 96.2–98.5%; Borno [15] trained on roughly one million images spanning
+several datasets — but in each case the model is trained and tested on each corpus separately. This
+is multi-benchmark *reporting*, not a test of transfer: it establishes that an architecture works on
+several datasets when trained on each, not that a model trained on one generalises to another.
+
+Genuine held-out-corpus evaluation is rare. The clearest instance in the reviewed literature is
+Raquib et al. [25], who train on their own 78-class dataset and evaluate on the external CHBCR
+benchmark, reporting 96.49% against 98.84% in-domain — a drop of roughly two points, which would
+suggest that cross-dataset transfer is largely intact. We are not aware of a systematic
+train-on-one, test-on-another study across the major Bangla isolated-character corpora, and Section
+5.5 of this paper reports a substantially different picture when one is run.
+
+The wider computer-vision literature has long held that dataset-specific bias inflates within-dataset
+performance. Torralba and Efros ⚑ showed that a classifier can identify which of several standard
+datasets an image came from with high accuracy — a direct demonstration that datasets carry
+signatures unrelated to their nominal content — and that models trained on one dataset degrade
+markedly when evaluated on another purporting to cover the same categories. Recht et al. ⚑ found
+measurable accuracy drops for ImageNet classifiers on a newly collected test set constructed to
+follow the original protocol, indicating that even careful replication of a collection procedure
+shifts the distribution. Domain adaptation theory ⚑ formalises this: generalisation error on a
+target domain is bounded by source error plus a divergence term between the domains, so arbitrarily
+low source error does not constrain target error when the divergence is large.
+
+For handwriting specifically the sources of divergence are concrete and well understood: capture
+device and resolution, binarisation and ink polarity, writing instrument, paper, and — most
+importantly — the writer population, since each corpus recruits a distinct set of contributors with
+their own regional and generational script conventions. Section 3.2 documents exactly these
+differences among the three corpora merged here: RAS-Compound stores high-resolution binarised
+white-on-black glyphs, Ekush is natively 28×28, and MatriVasha is black-on-white.
+
+The gap this identifies is therefore methodological rather than architectural. If within-corpus
+accuracy is the field's only reported metric, and if that metric substantially overstates
+performance on newly collected handwriting, then a decade of reported improvements may partly
+reflect increasingly effective fitting of corpus-specific signatures. Establishing whether this is
+so requires held-out-corpus evaluation as a standard protocol, which — to our knowledge — has not
+been systematically applied to Bangla compound characters. That is the gap Section 5.5 addresses.
+
+> **Add to Section 2.9 (Research Gaps), as a seventh gap:** *No systematic cross-corpus evaluation
+> exists for Bangla handwritten characters.* Multi-benchmark reporting is common, but
+> train-on-one/test-on-another transfer is essentially unmeasured, leaving open whether reported
+> accuracies reflect character recognition or corpus familiarity.
 
 Two points from that review bear directly on the design that follows and are worth restating here.
 Dosovitskiy et al. [22] show that ViT trails a comparably sized ResNet when trained on ImageNet-1k
@@ -472,6 +533,9 @@ to VGG-16 and ResNet-50 on Bengali basic characters; we reproduce that ordering 
 characters and a 256-class label space. It comes at 3.6× the parameters and 3.3× the inference cost
 (Section 5.6).
 
+**Figure 7** (`fig7_results.png`) summarises Tables 3 and 4, with the warm-started run shown hatched
+and marked excluded.
+
 The scratch CNN's 0.2115 against its 0.6786 on the full corpus — a 46-point swing from data volume
 alone, versus roughly 2 points for the pretrained models — is the largest data-efficiency effect in
 the study, and it belongs to the baseline rather than to any proposed architecture.
@@ -509,7 +573,7 @@ We therefore state plainly that the hypothesis motivating this work — that a T
 atop a convolutional tokenizer generalises more efficiently from few examples, in top-1 terms — is
 **not supported**.
 
-### 5.4 Calibration
+### 5.4 Calibration, and Why It Is Not an Architectural Advantage
 
 The same runs separate decisively on the quality of their probability estimates.
 
@@ -535,9 +599,38 @@ confidence, and this inflates the absolute ECE of both models — but ResNet18 m
 both models train with identical smoothing, the comparison is unaffected; absolute values should not
 be compared against ECE figures from studies that omit smoothing.
 
-The encoder is therefore not finding additional correct answers. It is converting the same
-evidence into substantially more trustworthy probability estimates, and most so when evidence is
-scarce.
+The encoder is therefore not finding additional correct answers. It is producing sharper, better
+calibrated probability estimates from the same evidence — which raises the question of whether the
+architecture is required to obtain them.
+
+**It is not.** Temperature scaling [Guo et al., 2017] is the standard post-hoc calibration
+correction: divide the logits by a single scalar fitted by minimising validation NLL, leaving
+accuracy exactly unchanged. Applying it to both models dissolves the gap.
+
+**Table 7. Temperature scaling, Ekush-only sweep. Accuracy is unchanged by construction.**
+
+| Budget | Model | T | ECE raw | ECE scaled | NLL raw | NLL scaled |
+|---:|---|---:|---:|---:|---:|---:|
+| 50/class | ResNet18 | 0.552 | 0.2496 | **0.0250** | 0.7174 | 0.4697 |
+| 50/class | ExtendedViT | 0.749 | 0.1171 | 0.0341 | 0.4985 | 0.4225 |
+| 100/class | ResNet18 | 0.628 | 0.1773 | **0.0232** | 0.4870 | 0.3338 |
+| 100/class | ExtendedViT | 0.787 | 0.0818 | 0.0152 | 0.3887 | 0.3285 |
+
+At 50 images per class a temperature-scaled ResNet18 (0.0250) is **better calibrated than an
+unscaled ExtendedViT** (0.1171, and 0.0341 once itself scaled). The fitted temperatures are below 1
+for both models, confirming that both were under-confident — an expected consequence of the label
+smoothing used throughout — with ResNet18 simply further from calibrated than the hybrid.
+
+The encoder was therefore compensating for a defect that one scalar removes more cheaply and more
+completely. **We conclude that the calibration difference is not an architectural advantage.** It is
+a difference in how far each architecture's raw confidences sit from their empirical accuracy under
+label smoothing, and it is fully correctable post hoc. Reporting it as an architectural property —
+as we were prepared to do before running this control — would have been wrong.
+
+The broader methodological point generalises beyond this paper: uncorrected ECE comparisons between
+architectures measure the interaction between an architecture and a training recipe, not a property
+of the architecture. Any calibration comparison should report temperature-scaled figures alongside
+raw ones.
 
 ### 5.5 Cross-Corpus Generalisation
 
@@ -552,7 +645,7 @@ RAS-Compound and MatriVasha share 58 classes; RAS-Compound and Ekush share 37. E
 share only 8, too few to be informative, so that pair is omitted. Backbones are ImageNet-initialised
 only, since a Bengali checkpoint would leak the target corpus into the source model.
 
-**Table 7. Cross-corpus generalisation (300 images per class, shared classes only).**
+**Table 8. Cross-corpus generalisation (300 images per class, shared classes only).**
 
 | Architecture | Train → Test | Shared | Same-corpus val | Cross-corpus test | Chance | Gap |
 |---|---|---:|---:|---:|---:|---:|
@@ -633,11 +726,15 @@ inheritance in ResNet18 — from a RAS-only checkpoint — moves first-epoch val
 0.703 to 0.234 in the single-source sweep. Both baselines were affected; Sections 5.3 and 5.4 use
 ImageNet initialisation throughout.
 
+**Temperature scaling.** Run, and reported in Section 5.4: a single scalar fitted on validation data
+removes the calibration difference between architectures entirely. This was the decisive control for
+the paper's remaining architectural claim, and it did not survive it.
+
 **Ablations worth adding if reviewers ask, or if space permits.** Each isolates one design decision
-and costs roughly 1.5 hours at the equal-budget setting. Given that the contribution is now a
-calibration effect, the most valuable addition is **post-hoc temperature scaling of ResNet18**: if a
-single scalar recovers the hybrid's calibration, the encoder is sufficient but not necessary, and
-the paper should say so.
+and costs roughly 1.5 hours at the equal-budget setting. Given that no architectural advantage
+survived, these are now of limited value; the `L = 0` variant is the only one we would prioritise,
+since it reduces exactly to the ResNet18 baseline and would confirm the encoder's contribution is
+null rather than merely small.
 
 | Ablation | Question it answers | Variants |
 |---|---|---|
@@ -652,7 +749,7 @@ ResNet18 baseline and isolates the encoder's entire contribution.
 
 ### 5.9 Comparison with Prior Published Results
 
-**Table 8. Positioning against prior Bengali character recognition work.**
+**Table 9. Positioning against prior Bengali character recognition work.**
 
 | Study | Architecture | Dataset | Classes | Reported |
 |---|---|---|---:|---:|
@@ -698,7 +795,7 @@ conjuncts. We report macro-F1 as a descriptive statistic only.
 0.90. The most-confused pairs are near-identical, and both architectures fail on essentially the
 same ones:
 
-**Table 9. Most-confused class pairs, full corpus (ExtendedViT / ResNet18 error counts).**
+**Table 10. Most-confused class pairs, full corpus (ExtendedViT / ResNet18 error counts).**
 
 | True → Predicted | ExtendedViT | ResNet18 | What differs |
 |---|---:|---:|---|
@@ -834,27 +931,26 @@ them. Single-corpus accuracies — including the near-ceiling figures widely rep
 literature — describe within-corpus competence and should not be read as evidence of generalisation.
 Merging corpora is best understood not as enlarging a training set but as covering domains.
 
-Against that backdrop, architecture differences are small. ExtendedViT — an ImageNet-pretrained
-ResNet18 acting as a learned tokenizer for a four-layer Transformer encoder — matches a fine-tuned
-ResNet18 on the full corpus (0.9760 vs 0.9764) and, in a controlled single-corpus sweep across
-per-class budgets from 50 to 1,000 with three seeds at the smallest budgets, shows **no significant
-accuracy advantage at any budget**. The hypothesis that motivated the architecture is not supported
-in top-1 terms.
+Against that backdrop, architecture differences are small. Four architectures spanning 0.06M to
+86.3M parameters differ by at most about one accuracy point once initialisation is controlled.
+ExtendedViT — an ImageNet-pretrained ResNet18 acting as a learned tokenizer for a four-layer
+Transformer encoder — matches a fine-tuned ResNet18 on the full corpus (0.9760 vs 0.9764) and shows
+**no significant accuracy advantage at any budget** in a controlled sweep with three seeds. An
+apparent halving of the baseline's expected calibration error proves fully correctable by
+temperature scaling, which leaves the scaled baseline better calibrated than the unscaled hybrid; it
+is therefore a property of the training recipe rather than of the architecture. ViT-B/16 is the most
+accurate model at an equal budget, at 3.6× the parameters and 3.3× the inference cost of the hybrid.
 
-The encoder's measurable contribution is to the model's probability estimates. ExtendedViT
-approximately halves ResNet18's expected calibration error at every budget (0.106 vs 0.245 at 50
-images per class; 0.079 vs 0.168 at 100; t > 17), with the advantage largest when data is scarcest
-and narrowing monotonically as data grows. It delivers this at 17 ms single-image CPU inference,
-3.3× faster than ViT-B/16 with 3.6× fewer parameters, while ViT-B/16 remains the most accurate model
-at an equal budget. For deployments where a character posterior feeds a downstream decoder under a
-compute constraint, that combination is the practical contribution of this work.
-
-We also report two findings about the benchmark itself. Without pretraining, a scratch CNN reaches
-0.0129 accuracy on the minority corpus that supplies 27 otherwise-unavailable classes, against 0.707
-on the largest corpus — on a merged corpus of unequal sources, transfer learning is what makes the
-minority source learnable at all. And the corpus's apparent long tail is an artifact of source size
-rather than of character frequency, since each constituent corpus is internally near-balanced; we
-therefore caution against interpreting per-class results on it as evidence about rare conjuncts.
+Three methodological cautions follow, each discovered by attempting to falsify a claim of our own.
+Warm-starting from a previously trained checkpoint — routine in this literature — inflated our
+equal-budget result by 1.43 accuracy points. Macro-F1 does not measure long-tail performance on this
+corpus: the 27 rarest classes score a *higher* mean F1 (0.9966) than the 229 common ones (0.9758),
+because rarity is confounded with source image quality. And architecture-level calibration
+comparisons should always be reported temperature-scaled, since uncorrected ECE measures the
+interaction of architecture and training recipe rather than a property of the architecture. We also
+note that without pretraining a scratch CNN reaches 0.0129 accuracy on the minority corpus supplying
+27 otherwise-unavailable classes, against 0.707 on the largest corpus — on a merged corpus of
+unequal sources, transfer learning is what makes the minority source learnable at all.
 
 Future work follows directly from the cross-corpus result. The field needs domain-invariant
 representations for handwritten Bengali: our preprocessing normalises polarity and scale and is
@@ -864,10 +960,10 @@ accuracy is the metric that should report progress on it. We would also encourag
 adopt held-out-corpus evaluation as standard practice alongside within-corpus splits, since the two
 measure very different things.
 
-On the architecture side, the calibration advantage should be tested at word level where the
-posterior actually feeds a decoder, replicated without label smoothing and on a second corpus, and
-compared against post-hoc temperature scaling of the convolutional baseline — which would establish
-whether the encoder is necessary for the effect or merely sufficient.
+On the architecture side, our results suggest the returns from further model design on isolated
+Bengali compound characters are limited, and that effort is better directed at the evaluation and
+data problems above. Where architecture does matter is cost: establishing the accuracy-per-millisecond
+frontier for CPU-only deployment, which our four points sketch but do not map.
 
 ---
 
@@ -879,7 +975,7 @@ train/validation/test partition is derived deterministically from a fixed seed (
 per-class shuffle, so the partition is identical for every run reported here and can be regenerated
 exactly.
 
-**Table 10. Complete training configuration.**
+**Table 11. Complete training configuration.**
 
 | Setting | Value |
 |---|---|
@@ -905,6 +1001,8 @@ Commands to reproduce every result:
 ```bash
 python train_arch.py --arch {cnn,resnet18,vit,extended_vit} [--limit-per-class 300] [--no-warm-start]
 python evaluate.py [--limit-per-class 300] [--suffix _imagenet] --confusion --per-class
+python cross_source.py --train <corpus> --test <corpus> --arch <arch>
+python temperature_scaling.py --source ekush --limit-per-class 50
 python paper/figures.py
 ```
 
@@ -1005,6 +1103,20 @@ in-text citation resolves and that Ethnologue, Rabby et al. (2018) for Ekush, an
 and RAS-Compound dataset papers are all present, since this draft cites them by name outside the
 numbered scheme.]`
 
+**References to add** — required by the new Section 2.7 and by Section 5.4. Verify each before use;
+they are cited from standard knowledge of these literatures rather than from a checked copy:
+
+- ⚑ Torralba, A. and Efros, A. A. *Unbiased Look at Dataset Bias.* CVPR 2011. — the "name that
+  dataset" demonstration and cross-dataset generalisation degradation.
+- ⚑ Recht, B., Roelofs, R., Schmidt, L. and Shamir, V. *Do ImageNet Classifiers Generalize to
+  ImageNet?* ICML 2019. — accuracy drops on a replication-protocol test set.
+- ⚑ Ben-David, S. et al. *A Theory of Learning from Different Domains.* Machine Learning, 2010. —
+  the source-error-plus-divergence bound.
+- ⚑ Guo, C., Pleiss, G., Sun, Y. and Weinberger, K. Q. *On Calibration of Modern Neural Networks.*
+  ICML 2017. — temperature scaling and expected calibration error, used in Section 5.4.
+- Optionally a recent domain-generalisation survey (e.g. Zhou et al., *Domain Generalization: A
+  Survey*, TPAMI 2022) if the venue expects broader positioning.
+
 ---
 
 ## Writing still required
@@ -1023,13 +1135,15 @@ currently venue-neutral and runs long for a conference; a journal such as *Patte
 Letters* or *IEEE Access* fits it better without cutting.
 
 **Needs writing once results land.** Section 2 is a pointer to your standalone review and must be
-pasted in and renumbered; the reference list must be reproduced and every in-text citation checked to
-resolve. The abstract's final paragraph is written against provisional numbers and needs rewriting
+pasted in, with the new subsection 2.7 (drafted in place) inserted and the existing 2.7–2.10
+renumbered to 2.8–2.11, plus the seventh research gap added to what becomes 2.10. The reference list
+must be reproduced, the five references listed at the end of this draft added and verified, and
+every in-text citation checked to resolve. The abstract's final paragraph is written against provisional numbers and needs rewriting
 once the ImageNet-init and ViT results are in. Figure captions are currently inline descriptions and
 should be rewritten as standalone captions — a reader should understand each figure without the body
 text.
 
-**Worth adding if space permits.** A graphical abstract (Figure 7b or Figure 8 would serve); a
+**Worth adding if space permits.** A graphical abstract (Figure 11 makes the paper's central point in one image); a
 notation table is already drafted as Appendix A; the full class inventory as supplementary material.
 
 ---

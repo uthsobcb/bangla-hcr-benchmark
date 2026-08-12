@@ -306,7 +306,64 @@ def fig6_training_curves():
 
 
 def fig7_results():
-    """(a) accuracy by method and budget; (b) the data-efficiency result."""
+    """Accuracy by method and budget, with the contaminated run marked.
+
+    The original panel (b) plotted a two-budget "data efficiency" comparison that the controlled
+    sweep later retracted (the ExtendedViT run in it was warm-started from a full-corpus
+    checkpoint). Plotting a withdrawn claim would be worse than plotting nothing, so it is gone;
+    Figure 10 carries the controlled version.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    FULL = {"resnet18": 0.9768, "extended_vit": 0.9756}
+    full_cnn = _parse_log(LOGS / "cnn_full.log")
+    if full_cnn:
+        FULL["cnn"] = max(r[4] for r in full_cnn)
+
+    BARS = [("cnn", "Scratch\nCNN", "#C44E52"), ("resnet18", "ResNet18", "#4C72B0"),
+            ("extended_vit_imagenet", "ExtendedViT\n(ImageNet)", "#55A868"),
+            ("vit", "ViT-B/16", "#8172B2"),
+            ("extended_vit", "ExtendedViT\n(warm-started)", "#999999")]
+    capped = {}
+    for key, _l, _c in BARS:
+        rows = _parse_log(LOGS / f"{key}.log")
+        if rows:
+            capped[key] = max(r[4] for r in rows)
+
+    fig, ax = plt.subplots(figsize=(8.6, 4.4))
+    x = np.arange(len(BARS))
+    for i, (key, label, color) in enumerate(BARS):
+        excluded = key == "extended_vit"
+        cv = capped.get(key, np.nan)
+        ax.bar(i - .2, cv, .38, color=color, alpha=.55 if excluded else 1.0,
+               hatch="//" if excluded else None, edgecolor=color)
+        fk = "extended_vit" if key == "extended_vit_imagenet" else key
+        fv = FULL.get(fk, np.nan) if not excluded else np.nan
+        ax.bar(i + .2, fv, .38, color=color, alpha=.35, edgecolor=color)
+        for xx, v in ((i - .2, cv), (i + .2, fv)):
+            if not np.isnan(v):
+                ax.text(xx, v + .015, f"{v:.4f}", ha="center", fontsize=7.5)
+    ax.text(len(BARS) - 1 - .2, .35, "excluded:\ninherited\nfull-corpus\nweights",
+            ha="center", fontsize=8, color="#666")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([l for _k, l, _c in BARS], fontsize=8.5)
+    ax.set_ylabel("Validation accuracy"), ax.set_ylim(0, 1.14)
+    ax.set_title("Accuracy by method — left bar 300/class, right bar full corpus",
+                 fontsize=11, loc="left")
+    ax.grid(axis="y", alpha=.25, lw=.6)
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+    fig.tight_layout()
+    fig.savefig(OUT / "fig7_results.png", dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
+def _fig7_results_old():
+    """(a) accuracy by method and budget; (b) the data-efficiency result. Superseded."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
