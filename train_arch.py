@@ -97,7 +97,7 @@ ARCHS = {
     ),
     "resnet18": dict(
         lr=3e-4,
-        build=lambda n, d, a: build_model(n, d),
+        build=lambda n, d, a: build_model(n, d, warm_start=not a.no_warm_start),
         groups=lambda m, lr: [{"params": list(m.parameters())[:-2], "lr": lr * 0.1},
                               {"params": m.fc.parameters(), "lr": lr}],
     ),
@@ -172,11 +172,19 @@ def main():
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--force", action="store_true", help="allow overwriting an existing best checkpoint")
     parser.add_argument("--no-warm-start", action="store_true",
-                        help="extended_vit only: initialise the backbone from ImageNet rather than "
-                             "the merged resnet18 checkpoint, so a capped run sees no full-data weights")
+                        help="initialise the backbone from ImageNet only, ignoring any previously "
+                             "trained Bengali checkpoint (resnet18 inherits resnet18_ras_only.pth, "
+                             "extended_vit inherits resnet18_merged.pth). Required for controlled "
+                             "comparisons, or one architecture starts with weights the others lack")
     parser.add_argument("--source", choices=list(SOURCE_DIRS), default=None,
                         help="restrict to one corpus and relabel to its classes only")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="repeat run: reseeds model init, shuffling and augmentation. The "
+                             "data split stays on seed 42 so every seed shares one test set.")
     args = parser.parse_args()
+
+    if args.seed is not None:
+        torch.manual_seed(args.seed)
 
     spec = ARCHS[args.arch]
     lr = args.lr if args.lr is not None else spec["lr"]
@@ -185,6 +193,7 @@ def main():
     tag = f"_{args.source}" if args.source else ""
     tag += f"_lpc{args.limit_per_class}" if args.limit_per_class else ""
     tag += "_imagenet" if args.no_warm_start else ""
+    tag += f"_seed{args.seed}" if args.seed is not None else ""
     best_ckpt = CHECKPOINTS / f"{args.arch}_merged{tag}.pth"
     last_ckpt = CHECKPOINTS / f"{args.arch}_merged{tag}_last.pth"
     CHECKPOINTS.mkdir(exist_ok=True)

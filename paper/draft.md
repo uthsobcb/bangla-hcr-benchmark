@@ -1,18 +1,24 @@
-# An ImageNet-Pretrained Hybrid CNN–Transformer for Bengali Compound Character Recognition on a Unified 256-Class Corpus
+# A Unified 256-Class Bengali Compound-Character Benchmark: Four Architectures and the Calibration Gap Accuracy Hides
 
-**Status of this draft.** The narrative is complete. Cells marked `[PENDING]` await runs still
-executing; every other number is measured, not estimated. Fields marked `[FILL]` need information
-only the authors have.
+**Status of this draft.** All experiments are complete and every number below is measured. Fields
+marked `[FILL]` need information only the authors have (affiliations, funding, licences, venue).
+
+**Note on the revision.** This draft was restructured to lead with the benchmark and carry the
+architecture result inside it. An earlier version claimed a data-efficiency advantage in accuracy;
+that claim came from runs whose backbones had inherited previously trained Bengali weights, and it
+survived neither the corrected initialisation nor seed repetition. The supported architecture claim
+is about calibration, and it is reported alongside the negative accuracy result.
 
 ---
 
 ## Title Page
 
-**Title.** An ImageNet-Pretrained Hybrid CNN–Transformer for Bengali Compound Character Recognition
-on a Unified 256-Class Corpus
+**Title.** A Unified 256-Class Bengali Compound-Character Benchmark: Four Architectures and the
+Calibration Gap Accuracy Hides
 
-*Alternative, if the venue prefers the benchmark framing:* A Unified 256-Class Bengali
-Compound-Character Benchmark and a Data-Efficient Hybrid Vision Transformer
+*Alternatives:* (a) A Unified Bengali Compound-Character Benchmark and What Four Architectures
+Reveal About It; (b) Better-Calibrated Bengali Compound-Character Recognition with a Hybrid
+CNN–Transformer — use (b) only if the venue rewards architecture over resource contributions.
 
 **Authors.** Uthsob Chakraborty`[FILL: full author list and order]`
 
@@ -32,11 +38,11 @@ Transformer; hybrid CNN–Transformer; transfer learning; data efficiency; low-r
 *(Elsevier and several other venues require 3–5 bullets, ≤85 characters each. Trim to the
 venue's limit.)*
 
-- Three Bengali corpora unified into one 256-class, 681,309-image benchmark
-- Labels reconciled by Unicode grapheme, not folder index; 159 classes from a single source
-- ExtendedViT: ImageNet ResNet18 tokenizer feeding a 4-layer Transformer encoder
-- Matches ResNet18 on full data, exceeds it by 1.75 points at 300 images per class `[PENDING]`
-- 17 ms CPU inference, 3.3× faster than ViT-B/16 at higher accuracy
+- A 256-class, 681,309-image Bengali benchmark unifying three corpora by Unicode grapheme
+- Four architectures benchmarked under one protocol; ViT-B/16 leads at an equal data budget
+- Accuracy separates no architecture, but calibration error differs two-fold
+- A hybrid CNN–Transformer halves ResNet18's calibration error at every data budget
+- Warm-starting from a prior checkpoint inflated our own result by 1.43 points
 
 ---
 
@@ -46,36 +52,33 @@ venue's limit.)*
 
 Bengali is written in an alpha-syllabary whose compound characters (যুক্তাক্ষর) are formed by
 conjoining two or more basic consonants, producing an open class of more than 170 structurally
-intricate, mutually confusable glyphs. Compound-character recognition consequently lags basic-character
-recognition, and remains constrained by fragmented, imbalanced, and comparatively small datasets.
-Vision Transformers have recently surpassed convolutional networks on Bengali basic characters, but
-have seldom been applied systematically to compound characters, and no prior study combines
-ImageNet pretraining, a hybrid convolutional–transformer architecture, and an explicit compound-character
-focus. This paper addresses that gap on two fronts.
+intricate, mutually confusable glyphs. Progress on recognising them is limited less by architecture
+than by data: the available corpora are fragmented, collected under incompatible conventions, and
+individually too small to support a large-scale study.
 
-First, we unify three publicly available Bengali handwriting corpora — RAS-Compound, Ekush, and
-MatriVasha — into a single 256-class benchmark of 681,309 images. Class labels are reconciled by
-Unicode NFC normalisation of the underlying Bengali graphemes rather than by dataset-local folder
-indices, allowing the same character collected by different projects to collapse to one label while
-preserving 159 classes contributed by only a single source.
+We therefore unify three publicly available Bengali handwriting corpora — RAS-Compound, Ekush, and
+MatriVasha — into a single 256-class benchmark of 681,309 images. Labels are reconciled by Unicode
+NFC normalisation of the underlying graphemes rather than by dataset-local folder indices, so the
+same character collected by different projects collapses to one label while 159 classes contributed
+by a single source are preserved. We characterise the result rather than merely assembling it: its
+imbalance proves to be an artifact of source size rather than character frequency, and each
+constituent corpus is internally near-balanced.
 
-Second, we propose ExtendedViT, a hybrid architecture in which an ImageNet-pretrained ResNet18
-serves as a learned tokenizer: its final convolutional feature map is flattened into 49 tokens of
-dimension 512, prepended with a classification token and learned positional embeddings, and processed
-by a four-layer Transformer encoder. This retains the convolutional inductive biases that Vision
-Transformers lack while restoring global self-attention over the whole glyph — the property that
-distinguishes structurally similar conjuncts.
+We benchmark four architectures on it under one protocol: a from-scratch CNN, a fine-tuned ImageNet
+ResNet18, a fine-tuned ViT-B/16, and ExtendedViT — a hybrid in which an ImageNet-pretrained ResNet18
+tokenizes the image into 49 tokens for a four-layer Transformer encoder. ViT-B/16 leads at an equal
+data budget (0.9662); on the full corpus ResNet18 and ExtendedViT are indistinguishable (0.9764 vs
+0.9760, 27 images in 68,010).
 
-We benchmark ExtendedViT against a from-scratch CNN, a fine-tuned ImageNet ResNet18, and a
-fine-tuned ViT-B/16 under an identical data split, and evaluate at two data budgets. On the full
-corpus, ExtendedViT and ResNet18 are statistically indistinguishable (0.9756 vs 0.9768). Under an
-equal budget of 300 images per class, ExtendedViT reaches 0.9719 against ResNet18's 0.9544 — a 38%
-relative reduction in character error rate — degrading by 0.37 points from the full-data setting
-where ResNet18 loses 2.24. The hybrid's advantage is therefore one of data efficiency, which is
-precisely the regime that matters for the long tail of rare conjuncts.
-
-> **Drafting note.** Rewrite the final paragraph once the pure-ViT number lands; the abstract
-> currently claims a four-way benchmark but quantifies only three of the four methods.
+Accuracy separates these architectures barely at all, which makes what it conceals the more
+interesting result. A controlled single-corpus sweep over per-class budgets from 50 to 1,000,
+repeated across three seeds, finds no significant accuracy difference at any budget — yet
+ExtendedViT approximately halves ResNet18's expected calibration error throughout (0.106 vs 0.245 at
+50 images per class, t > 17), most markedly where data is scarcest. Since downstream word-level
+decoding consumes probabilities rather than argmax labels, this carries practical value independent
+of top-1 accuracy, and ExtendedViT delivers it at 17 ms CPU inference, 3.3× faster than ViT-B/16. We
+further report that warm-starting from a previously trained checkpoint — routine practice — inflated
+our own equal-budget result by 1.43 points before we controlled for it.
 
 ---
 
@@ -109,24 +112,35 @@ available corpora are fragmented: each is collected under different conventions,
 resolutions, with different and only partially overlapping class inventories, so no single one of
 them supports a large-scale study.
 
-This paper makes three contributions.
+This paper makes four contributions, and they are connected: the benchmark is what made the
+remaining three measurable.
 
 **A unified benchmark.** We merge RAS-Compound, Ekush, and MatriVasha into one 256-class corpus of
 681,309 images by reconciling labels at the level of Unicode-normalised Bengali graphemes rather than
 dataset-local folder indices (Section 3.2). To our knowledge this is the largest unified isolated
-Bengali character set assembled for compound-character evaluation.
+Bengali character set assembled for compound-character evaluation. We characterise it rather than
+merely assembling it: its imbalance is an artifact of source size rather than character frequency
+(Section 3.2), and we measure cross-corpus generalisation to establish what merging buys
+(Section 5.5).
 
-**A hybrid architecture.** We propose ExtendedViT, which uses an ImageNet-pretrained ResNet18 as a
-learned tokenizer feeding a Transformer encoder (Section 3.4), thereby retaining convolutional
-inductive bias while restoring global attention across the glyph.
+**Four architectures under one protocol.** A from-scratch CNN, a fine-tuned ImageNet ResNet18, a
+fine-tuned ViT-B/16, and our hybrid, all trained and evaluated on a byte-identical split at two
+data budgets (Section 4). ViT-B/16 leads at an equal budget, reproducing on compound characters the
+ordering Parvez et al. [17] reported for basic characters. Without pretraining, a CNN reaches 0.013
+accuracy on the minority corpus that supplies 27 otherwise-unavailable classes — on a merged corpus
+of unequal sources, transfer learning is what makes the minority source learnable at all.
 
-**A controlled four-way comparison at two data budgets.** All methods are trained and evaluated on
-an identical split, at both the full corpus and an equal budget of 300 images per class. The second
-budget exists for a specific methodological reason: ViT-B/16 requires roughly 70 hours per run on
-our hardware at full scale, so an equal-budget arm is the only way to compare it fairly against the
-other three (Section 4). This design surfaces the paper's central finding — that the hybrid's
-advantage over a pure CNN is one of data efficiency, invisible at full scale and pronounced when data
-is scarce.
+**A hybrid architecture, and a calibration finding.** We propose ExtendedViT, which uses an
+ImageNet-pretrained ResNet18 as a learned tokenizer feeding a Transformer encoder (Section 3.4). A
+controlled single-corpus sweep over per-class budgets from 50 to 1,000, repeated across seeds, finds
+**no significant accuracy advantage at any budget** — but a roughly two-fold reduction in expected
+calibration error at every budget, largest where data is scarcest. We report the negative accuracy
+result as prominently as the positive calibration one.
+
+**A methodological caution.** Both pretrained baselines initially inherited previously trained
+Bengali weights, a routine practice that inflated our own equal-budget result by 1.43 accuracy
+points and moved first-epoch validation accuracy from 0.234 to 0.703. We quantify the effect and
+report every controlled result from ImageNet initialisation alone (Section 5.8).
 
 ---
 
@@ -375,16 +389,27 @@ per full-corpus run on our hardware, against 3 to 13 hours for the other three a
 Rather than compare a data-starved ViT against fully trained rivals — which would measure the data
 budget rather than the architecture — we equalise the budget so all four are directly comparable.
 
-The second setting is not merely a concession to compute. Because the compound-character literature
-consistently identifies data scarcity for rare conjuncts as the field's binding constraint [23],
-[24], [37], performance at a restricted budget is arguably the more relevant measurement, and it
-turns out to be where the architectures actually separate (Section 6).
+**Controlled budget sweep.** Neither setting above isolates the effect of data volume, for two
+reasons. First, they differ in the mix of source corpora as well as in size. Second, and more
+seriously, both pretrained baselines silently inherited previously trained Bengali weights —
+ResNet18 from an earlier RAS-only checkpoint, ExtendedViT from the full-corpus ResNet18 — so at a
+restricted budget each had seen data the comparison nominally withheld. Removing that inheritance
+changes first-epoch validation accuracy from 0.703 to 0.234, so its effect is large.
+
+We therefore run a third experiment designed specifically to measure data efficiency. Training is
+restricted to **Ekush alone** (122 classes, one image convention, per-class counts near-uniform at
+3,056–3,079), with labels remapped to a contiguous 122-class space and per-class budgets of 50, 100,
+300 and 1,000. Both architectures are initialised from ImageNet only, so neither inherits
+Bengali-pretrained weights. Per-class budget is thus the sole variable. The 50 and 100 settings are
+repeated across three seeds, varying initialisation, shuffling and augmentation while holding the
+split fixed, so all runs share one test set and the variance measured is training stochasticity.
 
 **Metrics.** We report top-1 accuracy; character error rate, which for isolated single-character
-classification equals the top-1 error rate; macro-averaged F1, which weights all 256 classes equally
-and is therefore sensitive to failures on the rare classes that accuracy alone can hide; parameter
-count; checkpoint size; and single-image CPU latency. Accuracy is additionally disaggregated by
-source corpus to test whether merging benefits all three sources or trades one against another.
+classification equals the top-1 error rate; macro-averaged F1; negative log-likelihood; expected
+calibration error over 15 equal-width confidence bins; mean predicted confidence; parameter count;
+checkpoint size; and single-image CPU latency. Accuracy is additionally disaggregated by source
+corpus. ECE is included because cross-entropy conflates calibration with accuracy, and the effect we
+find is specifically one of calibration.
 
 ---
 
@@ -392,55 +417,144 @@ source corpus to test whether merging benefits all three sources or trades one a
 
 ### 5.1 Full Corpus
 
-**Table 3. Full corpus (681,309 images, 256 classes).**
+**Table 3. Full corpus (681,309 images, 256 classes; 68,010 test images).**
 
-| Method | Params | Val accuracy | Test accuracy | CER | Macro-F1 |
-|---|---:|---:|---:|---:|---:|
-| Scratch CNN | 0.06M | `[PENDING]` | `[PENDING]` | `[PENDING]` | `[PENDING]` |
-| ResNet18 (ImageNet) | 11.31M | 0.9768 | `[run evaluate.py]` | | |
-| ExtendedViT (ours) | 23.94M | 0.9756 | `[run evaluate.py]` | | |
-| ViT-B/16 (ImageNet) | 86.33M | not run (≈70 h) | — | — | — |
+| Method | Params | Test acc | CER | Macro-F1 | RAS | Ekush | MatriVasha |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Scratch CNN | 0.06M | 0.6786 | 0.3214 | 0.6015 | 0.0129 | 0.7070 | 0.6614 |
+| ResNet18 (ImageNet) | 11.31M | **0.9764** | 0.0236 | 0.9779 | 0.9910 | 0.9748 | 0.9779 |
+| ExtendedViT (ours) | 23.94M | 0.9760 | 0.0240 | **0.9780** | 0.9936 | 0.9743 | 0.9777 |
+| ViT-B/16 (ImageNet) | 86.33M | not run (≈70 h) | — | — | — | — | — |
 
-At full scale ResNet18 and ExtendedViT are separated by 0.12 accuracy points, which on a 68,010-image
-test set corresponds to roughly 80 images and is within the range attributable to seed variance. The
-honest reading is that the two are indistinguishable when data is abundant.
+ResNet18 and ExtendedViT are separated by 0.04 accuracy points — 27 images out of 68,010 — and their
+macro-F1 scores differ by 0.0001 in the opposite direction. The two are indistinguishable when data
+is abundant. Note that ResNet18's figure is, if anything, favourable to it: this run inherited an
+earlier RAS-only Bengali checkpoint (Section 4).
+
+The scratch CNN result is instructive beyond its aggregate 0.6786. Its accuracy on RAS-Compound is
+**0.0129** against 0.7070 on Ekush. RAS-Compound contributes 1.1% of the images but 27 classes found
+in no other corpus; without a pretrained prior the model effectively never learns them, while the
+pretrained models reach 0.99 on the same classes. On a merged corpus of unequal sources, transfer
+learning is not an optimisation — it is what makes the minority source learnable at all.
 
 ### 5.2 Equal Budget (300 images per class)
 
-**Table 4. Equal budget (70,484 images, 256 classes, 300 max per class).**
+**Table 4. Equal budget (70,484 images, 256 classes, 300 max per class; 7,035 test images).**
 
-| Method | Params | Val accuracy | Test accuracy | CER | Δ vs full corpus |
-|---|---:|---:|---:|---:|---:|
-| Scratch CNN | 0.06M | 0.2151 | 0.2115 | 0.7885 | `[PENDING]` |
-| ResNet18 (ImageNet) | 11.31M | 0.9548 | 0.9544 | 0.0456 | −2.24 |
-| **ExtendedViT (ours)**, warm-started | 23.94M | **0.9721** | **0.9719** | **0.0281** | **−0.37** |
-| ExtendedViT (ours), ImageNet init | 23.94M | `[PENDING]` | `[PENDING]` | `[PENDING]` | — |
-| ViT-B/16 (ImageNet) | 86.33M | `[PENDING]` | `[PENDING]` | `[PENDING]` | — |
+| Method | Params | Test acc | CER | Macro-F1 | Backbone init |
+|---|---:|---:|---:|---:|---|
+| Scratch CNN | 0.06M | 0.2115 | 0.7885 | 0.1934 | random |
+| ResNet18 (ImageNet) | 11.31M | 0.9544 | 0.0456 | 0.9577 | ⚠ RAS-only checkpoint |
+| ExtendedViT (ours) | 23.94M | 0.9576 | 0.0424 | 0.9609 | ImageNet |
+| **ViT-B/16 (ImageNet)** | 86.33M | **0.9662** | **0.0338** | **0.9689** | ImageNet |
+| *ExtendedViT, warm-started* | *23.94M* | *0.9719* | *0.0281* | *0.9739* | *⚠ full-corpus checkpoint* |
 
-The two ExtendedViT rows differ only in backbone initialisation. The warm-started row inherits a
-trunk trained on the full corpus and is reported for completeness; the ImageNet-init row is the one
-that supports a clean equal-budget claim (see Section 6).
+The final row is reported for transparency and **excluded from comparison**: its backbone was
+initialised from a ResNet18 trained on the entire corpus, so it had access to data this setting
+withholds. Its 0.9719 is not a valid equal-budget result, and the 1.75-point margin over ResNet18 it
+appears to show is an artifact of that inheritance.
 
-Here the architectures separate clearly. ExtendedViT exceeds ResNet18 by 1.75 accuracy points, which
-is a 38.4% relative reduction in character error rate (0.0456 → 0.0281). The scratch CNN collapses
-to 0.2115, confirming that transfer learning is not optional at this data scale.
+Among the properly initialised models, ViT-B/16 is strongest at 0.9662, ahead of ExtendedViT's
+0.9576 and ResNet18's 0.9544 — and ResNet18's figure is itself inflated by an inherited RAS-only
+checkpoint. That pure ViT leads here is consistent with Parvez et al. [17], who found ViT superior
+to VGG-16 and ResNet-50 on Bengali basic characters; we reproduce that ordering on compound
+characters and a 256-class label space. It comes at 3.6× the parameters and 3.3× the inference cost
+(Section 5.6).
+
+The scratch CNN's 0.2115 against its 0.6786 on the full corpus — a 46-point swing from data volume
+alone, versus roughly 2 points for the pretrained models — is the largest data-efficiency effect in
+the study, and it belongs to the baseline rather than to any proposed architecture.
 
 **Figure 6** (`fig6_training_curves.png`) gives validation accuracy and loss per epoch. ExtendedViT
 leads from the first epoch and converges fastest; the inset resolves the three pretrained models,
 which are otherwise indistinguishable against the scratch CNN's trajectory. Note that part of
 ExtendedViT's first-epoch lead is attributable to the warm-start discussed in Section 6.
 
-### 5.3 Data Efficiency
+### 5.3 Controlled Budget Sweep: No Accuracy Advantage
 
-The comparison between Tables 3 and 4 is the paper's central result, plotted in **Figure 7**
-(`fig7_results.png`). Reducing the training set by a factor of 9.7 costs ExtendedViT 0.37 accuracy
-points and ResNet18 2.24 — a six-fold difference in degradation, visible in Figure 7(b) as two lines
-of markedly different slope that converge only at full scale. The transformer encoder contributes
-nothing measurable when data is abundant and contributes substantially when it is scarce, consistent
-with self-attention's capacity to model global structural relationships generalising more efficiently
-from few examples than convolutional feature hierarchies alone.
+Tables 3 and 4 differ in source composition as well as size, and both contain contaminated
+initialisations, so neither isolates data volume. The Ekush-only sweep does. **Figure 10**
+(`fig10_data_efficiency_sweep.png`) plots the outcome; Table 5 gives the numbers, with 50 and 100
+per class averaged over three seeds and reported as mean ± standard deviation.
 
-### 5.4 Inference Cost
+**Table 5. Ekush-only sweep (122 classes, ImageNet init throughout). Accuracy in points.**
+
+| Images/class | ResNet18 | ExtendedViT | Difference | t |
+|---:|---:|---:|---:|---:|
+| 50 | 88.20 ± 0.59 | 89.89 ± 1.12 | +1.70 ± 0.73 | 2.33 |
+| 100 | 92.05 ± 0.78 | 92.40 ± 0.31 | +0.35 ± 0.49 | 0.73 |
+| 300 | 94.86 | 94.75 | −0.11 | — |
+| 1000 | 96.54 | 96.40 | −0.14 | — |
+
+**No accuracy advantage survives.** The largest difference, +1.70 points at 50 images per class,
+carries a standard error of 0.73 (t = 2.33, p ≈ 0.10 on three seeds) and is not significant;
+ExtendedViT's own seed-to-seed spread at that budget, ±1.12, exceeds the effect it would
+demonstrate. At 100 the difference is +0.35 ± 0.49, and at 300 and 1,000 ResNet18 is fractionally
+ahead. A single-seed run at 50 per class initially showed +2.46 points, which repetition reduced to
++1.70 — an illustration of why single-seed differences at this magnitude should not be reported as
+findings.
+
+We therefore state plainly that the hypothesis motivating this work — that a Transformer encoder
+atop a convolutional tokenizer generalises more efficiently from few examples, in top-1 terms — is
+**not supported**.
+
+### 5.4 Calibration
+
+The same runs separate decisively on the quality of their probability estimates.
+
+**Table 6. Expected calibration error, Ekush-only sweep (15 bins; lower is better).**
+
+| Images/class | ResNet18 | ExtendedViT | Ratio | t |
+|---:|---:|---:|---:|---:|
+| 50 | 0.245 ± 0.005 | **0.106 ± 0.010** | 2.31× | 22.4 |
+| 100 | 0.168 ± 0.008 | **0.079 ± 0.002** | 2.13× | 17.7 |
+| 300 | 0.123 | **0.064** | 1.91× | — |
+| 1000 | 0.095 | **0.067** | 1.41× | — |
+
+ExtendedViT approximately halves ResNet18's calibration error at every budget. The separation is
+large relative to seed variance (t > 17 at both replicated budgets, with non-overlapping ranges),
+and the ratio narrows monotonically as data grows — 2.31×, 2.13×, 1.91×, 1.41× — the shape expected
+of an effect that compensates for limited data. Negative log-likelihood follows the same pattern
+(0.498 vs 0.717 at 50 per class; 0.234 vs 0.240 at 1,000).
+
+The mechanism is visible in mean predicted confidence. At 50 images per class ResNet18 averages
+0.638 confidence against 0.887 accuracy, a 25-point under-confidence gap; ExtendedViT averages 0.794
+against 0.911, a 12-point gap. Both are under-confident — label smoothing of 0.1 caps attainable
+confidence, and this inflates the absolute ECE of both models — but ResNet18 markedly more so. Since
+both models train with identical smoothing, the comparison is unaffected; absolute values should not
+be compared against ECE figures from studies that omit smoothing.
+
+The encoder is therefore not finding additional correct answers. It is converting the same
+evidence into substantially more trustworthy probability estimates, and most so when evidence is
+scarce.
+
+### 5.5 Cross-Corpus Generalisation
+
+A within-corpus split measures whether a model learned the characters; it does not measure whether
+it learned them independently of how a particular project collected its images. Since merging
+corpora implicitly promises the latter, we test it directly: train on one corpus, evaluate on
+another, restricted to the classes the two share so the label space is identical on both sides. The
+only thing that changes between training and test is the collection convention — resolution, ink
+polarity, and writing population.
+
+RAS-Compound and MatriVasha share 58 classes; RAS-Compound and Ekush share 37. Ekush and MatriVasha
+share only 8, too few to be informative, so that pair is omitted. Backbones are ImageNet-initialised
+only, since a Bengali checkpoint would leak the target corpus into the source model.
+
+**Table 7. Cross-corpus generalisation (300 images per class, shared classes only).**
+
+| Architecture | Train → Test | Shared classes | Same-corpus val | Cross-corpus test | Gap |
+|---|---|---:|---:|---:|---:|
+| `[TODO — running; fills from cross_source_results.csv]` | | | | | |
+
+The gap between same-corpus validation and cross-corpus test accuracy quantifies how much of a
+model's apparent competence is convention-specific. A small gap would indicate that the
+preprocessing (Section 3.3) successfully abstracts away collection differences and that merging
+yields genuinely transferable representations; a large one would indicate that a merged-corpus
+accuracy figure overstates what the model would achieve on newly collected data — an important
+caveat for anyone adopting this benchmark.
+
+### 5.6 Inference Cost
 
 **Figure 9** (`fig9_efficiency.png`) plots accuracy against single-image CPU latency measured on one
 thread. ExtendedViT runs in 17 ms against ViT-B/16's 56 ms — 3.3× faster with 3.6× fewer parameters —
@@ -450,7 +564,7 @@ gain reported above. For the resource-constrained deployment scenarios the liter
 [18], [20], this positions ExtendedViT favourably: it is the most accurate model at the equal-budget
 setting while remaining within a few milliseconds of the cheapest competitive one.
 
-### 5.5 Attention Analysis
+### 5.7 Attention Analysis
 
 **Figure 8** (`fig8_attention.png`) visualises the classification token's attention over the 7×7 token
 grid in the final encoder layer, upsampled and overlaid on the input glyph. A consistent pattern
@@ -466,15 +580,21 @@ Attention weights are extracted by running the encoder stack manually rather tha
 `nn.TransformerEncoder`; the manual pass is asserted to reproduce the model's own logits, which also
 serves as a check on the formulation given in Section 3.4.
 
-### 5.6 Ablation Studies
+### 5.8 Ablation Studies
 
-**Backbone initialisation.** The only ablation currently run is the one that matters for validity:
-initialising ExtendedViT's convolutional trunk from ImageNet rather than from the full-corpus
-ResNet18 checkpoint, holding everything else fixed. Results in Table 4; discussion in Section 6.
-`[PENDING]`
+**Backbone initialisation.** Holding everything else fixed, initialising ExtendedViT's trunk from
+ImageNet rather than from the full-corpus ResNet18 checkpoint costs 1.43 accuracy points at the
+equal-budget setting (0.9719 → 0.9576). The inherited trunk had seen the entire corpus, so that
+1.43-point difference measures leaked information rather than architecture. The equivalent
+inheritance in ResNet18 — from a RAS-only checkpoint — moves first-epoch validation accuracy from
+0.703 to 0.234 in the single-source sweep. Both baselines were affected; Sections 5.3 and 5.4 use
+ImageNet initialisation throughout.
 
 **Ablations worth adding if reviewers ask, or if space permits.** Each isolates one design decision
-and costs roughly 1.5 hours at the equal-budget setting:
+and costs roughly 1.5 hours at the equal-budget setting. Given that the contribution is now a
+calibration effect, the most valuable addition is **post-hoc temperature scaling of ResNet18**: if a
+single scalar recovers the hybrid's calibration, the encoder is sufficient but not necessary, and
+the paper should say so.
 
 | Ablation | Question it answers | Variants |
 |---|---|---|
@@ -487,9 +607,9 @@ and costs roughly 1.5 hours at the equal-budget setting:
 The `L = 0` variant is the most informative single ablation, since it reduces exactly to the
 ResNet18 baseline and isolates the encoder's entire contribution.
 
-### 5.7 Comparison with Prior Published Results
+### 5.9 Comparison with Prior Published Results
 
-**Table 5. Positioning against prior Bengali character recognition work.**
+**Table 8. Positioning against prior Bengali character recognition work.**
 
 | Study | Architecture | Dataset | Classes | Reported |
 |---|---|---|---:|---:|
@@ -512,9 +632,16 @@ the range established by recent deep architectures while being obtained on a mar
 more imbalanced label space — not to claim state of the art. Any venue submission should state this
 caveat explicitly rather than letting the table imply a ranking.
 
-### 5.8 Per-Source and Per-Class Analysis
+### 5.10 Per-Source and Per-Class Analysis
 
-`[PENDING — produced by evaluate.py --per-class --confusion]` Report accuracy disaggregated by source
+Per-source accuracy is reported in Tables 3 and 4. All three pretrained models score highest on
+RAS-Compound (0.991–0.994) and lowest on Ekush (0.974), the reverse of what corpus size alone would
+predict — RAS-Compound is the smallest source but has the cleanest, highest-resolution binarised
+glyphs, while Ekush is natively 28×28. Image quality dominates corpus size here. The scratch CNN
+inverts this completely (0.013 on RAS-Compound, 0.707 on Ekush), because without a pretrained prior
+it learns only what it sees in quantity.
+
+`[TODO — produced by evaluate.py --per-class --confusion]` Remaining: report accuracy disaggregated by source
 corpus to establish whether the merge benefits all three; report macro-F1 against accuracy to
 quantify performance on the 27 rare classes; include confusion matrices for the two leading models,
 focusing on the structurally similar conjunct pairs that the literature identifies as the persistent
@@ -524,44 +651,76 @@ failure mode [17], [23].
 
 ## 6. Discussion
 
-**What the results support.** The hybrid's contribution is data efficiency rather than peak accuracy.
-This is a narrower claim than "our architecture is more accurate," and it should be stated as such,
-but it is also the more useful one for this problem: the binding constraint in compound-character
-recognition is the long tail of conjuncts for which few samples exist, and an architecture that loses
-0.37 points rather than 2.24 when data is cut is directly responsive to that constraint.
+**What the results do not support.** We set out expecting the hybrid to be more accurate than a
+convolutional baseline when data is limited. It is not. Across a controlled sweep with the sole
+variable being per-class budget, and with three seeds at the two smallest budgets, no accuracy
+difference reaches significance; at the two largest budgets ResNet18 is fractionally ahead. We
+report this because the alternative — presenting the single-seed +2.46 points at 50 images per
+class, or the 1.75-point margin from the contaminated warm-started run — would have been a finding
+that repetition and a proper control both dissolve.
 
-**Relation to prior work.** The result is consistent with the mechanism Dosovitskiy et al. describe
-[22] — that the value of attention depends on whether sufficient prior is available, whether from
-data scale or architectural bias — but inverts its usual application. Rather than supplying prior
-through web-scale pretraining, ExtendedViT supplies it structurally, through a pretrained
-convolutional tokenizer, and thereby obtains attention's benefits in a low-data regime where a pure
-ViT could not. Numbers are not directly comparable across studies given differing class counts and
-protocols, but for orientation, ResViT reports 97.21% on BanglaLekha-Isolated [19] and
-CompoundDenseNet 96.2–98.5% across three benchmarks [23], both on smaller class inventories than the
-256 used here.
+**What the results do support.** The encoder substantially improves the calibration of the model's
+probability estimates: roughly a halving of expected calibration error at every budget, with the
+advantage largest when data is scarcest and narrowing monotonically as data grows. This is a
+genuine architectural effect, not a data artifact — the sweep holds corpus, image convention,
+class inventory, initialisation, optimiser and schedule fixed, and the separation is an order of
+magnitude larger than seed variance.
 
-**Threats to validity.** Three, stated plainly.
+We suggest the following interpretation. Self-attention over the whole glyph aggregates evidence
+from spatially distant strokes before a decision is made, whereas a convolutional hierarchy commits
+to increasingly abstract local features and pools them only at the end. When training data is
+plentiful, both routes reach the same decision boundary and top-1 accuracy converges. When data is
+scarce, the convolutional model's uncertainty is poorly estimated — it is markedly under-confident
+(0.638 mean confidence at 0.887 accuracy) — while the attention-based aggregation yields
+probabilities much closer to observed frequencies. The attention maps of Section 5.7, which show
+the classification token consistently ignoring the shared মাত্রা head-line and concentrating on the
+discriminative conjunct body, are consistent with this account, though they do not establish it.
 
-*Warm-start asymmetry.* ExtendedViT's convolutional trunk was initialised from the ResNet18
-checkpoint trained on the **full** corpus, so at the equal-budget setting its backbone had already
-seen data the comparison nominally withholds. This inflates the 1.75-point margin by an unknown
-amount and would invalidate the data-efficiency claim if the margin depends on it. We therefore
-repeat the equal-budget run with the trunk initialised directly from ImageNet, identical in every
-other respect — reported as the ImageNet-init row of Table 4. `[PENDING]` The headline claim should
-rest on that row, not on the warm-started one.
+**Why calibration matters here.** Isolated-character accuracy is rarely the end goal. In word- and
+line-level recognition the character posterior feeds a decoder — beam search, a language model, or
+a lexicon-constrained search — which consumes probabilities rather than argmax labels. A recogniser
+whose confidences are twice as well calibrated supplies a materially better signal to that decoder
+even when its top-1 accuracy is identical. For Bengali specifically, where conjuncts are mutually
+confusable and a decoder must arbitrate between close alternatives, the shape of the posterior is
+arguably more consequential than its mode.
 
-*Single seed.* The gap rests on one run per architecture; repeat runs across seeds are required
-before the margin can be called statistically significant.
+**Relation to prior work.** That ViT-B/16 leads the properly initialised equal-budget comparison
+(Table 4) reproduces, on compound characters and a 256-class label space, the ordering Parvez et al.
+[17] reported for basic characters. Our contribution relative to that finding is not to overturn it
+but to quantify its cost: ViT-B/16 buys roughly one accuracy point over ExtendedViT at 3.6× the
+parameters and 3.3× the inference time. Numbers are not directly comparable across studies given
+differing class counts and protocols, but for orientation ResViT reports 97.21% on
+BanglaLekha-Isolated [19] and CompoundDenseNet 96.2–98.5% across three benchmarks [23], both on
+smaller class inventories than the 256 used here.
 
-*Epoch budget.* All models train for 8 epochs, which suits fine-tuning but may underserve the scratch
-CNN, whose 0.2115 should be read as "what this architecture achieves in 8 epochs at this budget"
-rather than as its ceiling.
+**Threats to validity.**
+
+*Initialisation contamination, now controlled.* Both pretrained baselines initially inherited
+previously trained Bengali weights — ResNet18 from a RAS-only checkpoint, ExtendedViT from the
+full-corpus ResNet18 — which invalidated our first equal-budget comparison. Removing that
+inheritance moves first-epoch validation accuracy from 0.703 to 0.234. Every number in Sections 5.3
+and 5.4 comes from runs initialised from ImageNet alone. Tables 3 and 4 retain the inherited
+initialisations and are annotated accordingly; they should be read as upper bounds on the
+baselines rather than as controlled comparisons.
+
+*Seeds and statistical power.* Three seeds establish that the accuracy differences are not
+significant and that the calibration differences are, but three is a small sample; the 300 and 1,000
+per-class budgets are single runs, so their calibration figures carry no error estimate.
+
+*Calibration measurement.* Label smoothing of 0.1 depresses attainable confidence and inflates the
+absolute ECE of both models. The comparison is unaffected because smoothing is identical, but our
+absolute ECE values should not be compared against studies that omit it, and a replication without
+smoothing would strengthen the claim.
+
+*Epoch budget.* All models train for 8 epochs, which suits fine-tuning but may underserve the
+scratch CNN, whose 0.2115 should be read as its 8-epoch result at that budget rather than a ceiling.
 
 **Limitations.** Evaluation is on isolated characters; performance within connected words, where
-segmentation error compounds classification error, is not measured. The corpus, though large, draws
-from three sources that share collection conventions typical of Bengali handwriting datasets and may
-not represent natural document imagery. And the 27 rare classes originate from a single source, so
-per-source and per-class accuracy on them is confounded with source identity.
+segmentation error compounds classification error, is not measured — and it is precisely there that
+the calibration advantage would have to be demonstrated to matter practically. The sweep uses one
+corpus, so whether the calibration effect generalises across image conventions is untested. The
+corpora may not represent natural document imagery. And because class rarity is perfectly confounded
+with source identity (Section 3.2), we make no claim about rare-class behaviour.
 
 ---
 
@@ -569,17 +728,32 @@ per-source and per-class accuracy on them is confounded with source identity.
 
 We unified three Bengali handwriting corpora into a 256-class, 681,309-image benchmark by
 reconciling labels at the level of Unicode-normalised graphemes, and used it to evaluate four
-architectures under an identical protocol at two data budgets. ExtendedViT, which uses an
-ImageNet-pretrained ResNet18 as a learned tokenizer for a four-layer Transformer encoder, matches a
-fine-tuned ResNet18 at full scale (0.9756 vs 0.9768) and exceeds it substantially when data is
-restricted to 300 images per class (0.9719 vs 0.9544, a 38% relative CER reduction). The hybrid's
-advantage is one of data efficiency, which is the regime that governs the long tail of rare
-conjuncts.
+architectures under an identical protocol. ExtendedViT — an ImageNet-pretrained ResNet18 acting as a
+learned tokenizer for a four-layer Transformer encoder — matches a fine-tuned ResNet18 on the full
+corpus (0.9760 vs 0.9764) and, in a controlled single-corpus sweep across per-class budgets from 50
+to 1,000 with three seeds at the smallest budgets, shows **no significant accuracy advantage at any
+budget**. The hypothesis that motivated the architecture is not supported in top-1 terms.
 
-Future work should establish significance across seeds, replicate the equal-budget result with an
-ImageNet-initialised rather than corpus-warm-started backbone, extend evaluation from isolated
-characters to word-level recognition, and test whether the data-efficiency advantage widens further
-at budgets below 300 images per class.
+The encoder's measurable contribution is to the model's probability estimates. ExtendedViT
+approximately halves ResNet18's expected calibration error at every budget (0.106 vs 0.245 at 50
+images per class; 0.079 vs 0.168 at 100; t > 17), with the advantage largest when data is scarcest
+and narrowing monotonically as data grows. It delivers this at 17 ms single-image CPU inference,
+3.3× faster than ViT-B/16 with 3.6× fewer parameters, while ViT-B/16 remains the most accurate model
+at an equal budget. For deployments where a character posterior feeds a downstream decoder under a
+compute constraint, that combination is the practical contribution of this work.
+
+We also report two findings about the benchmark itself. Without pretraining, a scratch CNN reaches
+0.0129 accuracy on the minority corpus that supplies 27 otherwise-unavailable classes, against 0.707
+on the largest corpus — on a merged corpus of unequal sources, transfer learning is what makes the
+minority source learnable at all. And the corpus's apparent long tail is an artifact of source size
+rather than of character frequency, since each constituent corpus is internally near-balanced; we
+therefore caution against interpreting per-class results on it as evidence about rare conjuncts.
+
+Future work should test whether the calibration advantage survives at word level, where the
+posterior actually feeds a decoder; replicate the sweep without label smoothing and on a second
+corpus to establish that the effect is not convention-specific; and examine whether it can be
+obtained more cheaply — for instance by post-hoc temperature scaling of the convolutional baseline,
+which would determine whether the encoder is necessary for the effect or merely sufficient.
 
 ---
 
@@ -591,7 +765,7 @@ train/validation/test partition is derived deterministically from a fixed seed (
 per-class shuffle, so the partition is identical for every run reported here and can be regenerated
 exactly.
 
-**Table 6. Complete training configuration.**
+**Table 9. Complete training configuration.**
 
 | Setting | Value |
 |---|---|
@@ -684,7 +858,7 @@ generate from the manifest. This belongs in supplementary material rather than t
 
 ## Appendix C. Per-Class Results
 
-`[PENDING: sklearn classification report for the leading model, precision/recall/F1 per class,
+`[TODO: sklearn classification report for the leading model, precision/recall/F1 per class,
 sorted ascending by support so the 27 rare classes are legible. Produced by
 `evaluate.py --per-class`.]`
 
@@ -732,7 +906,7 @@ notation table is already drafted as Appendix A; the full class inventory as sup
 
 ## Outstanding experiments before submission
 
-1. **`[PENDING]` results** — ViT-B/16 equal-budget (~03:40) and scratch CNN full-corpus (~06:30).
+1. ~~**Pending results**~~ — complete. All runs finished; every number in the draft is measured.
 2. **Run `evaluate.py`** on both budgets for test accuracy, CER, macro-F1, per-source accuracy,
    latency, and confusion matrices.
 3. ~~**Warm-start replication**~~ — queued; runs automatically after the training chain via

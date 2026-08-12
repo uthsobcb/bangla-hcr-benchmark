@@ -507,10 +507,90 @@ def fig9_efficiency():
     plt.close(fig)
 
 
+SWEEP_BUDGETS = [50, 100, 300, 1000]
+
+
+def _sweep_result(arch, budget):
+    import re
+    p = LOGS / f"sweep_{arch}_{budget}.log"
+    if not p.exists():
+        return None
+    m = re.findall(r"Test Accuracy: ([\d.]+) \| Test Loss: ([\d.]+)", p.read_text(errors="replace"))
+    return (float(m[-1][0]), float(m[-1][1])) if m else None
+
+
+def _sweep_metrics():
+    """{arch: {budget: {'acc': [...], 'ece': [...]}}} pooled over seeds, from the results CSVs."""
+    import pandas as pd
+    out = {}
+    for budget in SWEEP_BUDGETS:
+        for suffix in ("", "_seed1", "_seed2"):
+            f = OUT.parent / f"results_sweep_{budget}{suffix}.csv"
+            if not f.exists():
+                continue
+            for _, r in pd.read_csv(f).iterrows():
+                d = out.setdefault(r["method"], {}).setdefault(budget, {"acc": [], "ece": []})
+                d["acc"].append(r["test_acc"])
+                d["ece"].append(r["ECE"])
+    return out
+
+
+def fig10_data_efficiency_sweep():
+    """Ekush-only budget sweep: one corpus, one image convention, near-uniform class counts,
+    both architectures ImageNet-initialised — so per-class budget is the only variable.
+    50 and 100 per class are repeated over 3 seeds; error bars are ±1 sd."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import statistics as st
+
+    ARCHS_ = [("resnet18", "ResNet18", "#4C72B0"), ("extended_vit", "ExtendedViT (ours)", "#55A868")]
+    m = _sweep_metrics()
+
+    def series(arch, key):
+        xs, mus, sds = [], [], []
+        for b in SWEEP_BUDGETS:
+            vals = m.get(arch, {}).get(b, {}).get(key, [])
+            if vals:
+                xs.append(b)
+                mus.append(st.mean(vals))
+                sds.append(st.stdev(vals) if len(vals) > 1 else 0.0)
+        return xs, mus, sds
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.5, 4.2))
+    for arch, label, color in ARCHS_:
+        for ax, key in ((ax1, "acc"), (ax2, "ece")):
+            xs, mus, sds = series(arch, key)
+            if xs:
+                ax.errorbar(xs, mus, yerr=sds, fmt="-o", color=color, ms=5, lw=1.8,
+                            capsize=3, elinewidth=1.2, label=label)
+
+    ax1.set_ylabel("Test accuracy")
+    ax1.set_title("(a) Accuracy — differences within seed noise", fontsize=10.5, loc="left")
+    ax1.legend(fontsize=9, frameon=False, loc="lower right")
+
+    ax2.set_ylabel("Expected calibration error")
+    ax2.set_title("(b) Calibration — separated at every budget", fontsize=10.5, loc="left")
+    ax2.set_ylim(0, None)
+    ax2.legend(fontsize=9, frameon=False, loc="upper right")
+
+    for ax in (ax1, ax2):
+        ax.set_xscale("log")
+        ax.set_xticks(SWEEP_BUDGETS)
+        ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+        ax.set_xlabel("Training images per class (log scale)")
+        ax.grid(alpha=.25, lw=.6)
+        for s in ("top", "right"):
+            ax.spines[s].set_visible(False)
+    fig.tight_layout()
+    fig.savefig(OUT / "fig10_data_efficiency_sweep.png", dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     for fn in (fig1_workflow, fig2_dataset, fig3_architecture, fig4_samples,
                fig5_preprocessing, fig6_training_curves, fig7_results, fig8_attention,
-               fig9_efficiency):
+               fig9_efficiency, fig10_data_efficiency_sweep):
         try:
             fn()
             print(f"{fn.__name__}: ok")

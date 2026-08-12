@@ -154,11 +154,15 @@ def pick_device():
     return torch.device("cpu")
 
 
-def build_model(num_classes, device):
-    model = models.resnet18(weights="IMAGENET1K_V1" if not OLD_CHECKPOINT.exists() else None)
+def build_model(num_classes, device, warm_start=True):
+    """warm_start=False forces plain ImageNet init — required for controlled comparisons, where
+    inheriting resnet18_ras_only.pth would hand this model Bengali-pretrained weights the
+    architectures it is being compared against never saw."""
+    use_old = warm_start and OLD_CHECKPOINT.exists()
+    model = models.resnet18(weights="IMAGENET1K_V1" if not use_old else None)
     model.fc = nn.Linear(model.fc.in_features, num_classes)
 
-    if OLD_CHECKPOINT.exists():
+    if use_old:
         old = torch.load(OLD_CHECKPOINT, map_location="cpu", weights_only=False)
         old_sd, new_sd = old["state_dict"], model.state_dict()
         for k in new_sd:

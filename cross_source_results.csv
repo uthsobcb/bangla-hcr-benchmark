@@ -1,0 +1,2 @@
+arch,train_src,test_src,shared_classes,limit_per_class,same_source_val,cross_source_test,gap
+resnet18,matrivasha,ras,58,300,0.9678,0.0317,0.9361

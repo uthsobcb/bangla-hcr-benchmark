@@ -37,12 +37,33 @@ def source_of(path):
 @torch.no_grad()
 def predict(model, loader, device):
     model.eval()
-    preds, labels = [], []
+    preds, labels, confs, nll = [], [], [], 0.0
     for imgs, y in loader:
         out = model(imgs.to(device))
-        preds.append(out.argmax(1).cpu())
+        p = out.softmax(1).cpu()
+        top = p.max(1)
+        preds.append(top.indices)
+        confs.append(top.values)
         labels.append(y)
-    return torch.cat(preds).numpy(), torch.cat(labels).numpy()
+        nll += -torch.log(p[range(len(y)), y].clamp_min(1e-12)).sum().item()
+    labels = torch.cat(labels)
+    return (torch.cat(preds).numpy(), labels.numpy(),
+            torch.cat(confs).numpy(), nll / len(labels))
+
+
+def expected_calibration_error(confs, correct, n_bins=15):
+    """ECE: average |accuracy − confidence| across equal-width confidence bins.
+
+    Test loss suggested the hybrid is better calibrated; this measures it directly rather than
+    inferring it from cross-entropy, which conflates calibration with accuracy.
+    """
+    ece, n = 0.0, len(confs)
+    edges = np.linspace(0, 1, n_bins + 1)
+    for lo, hi in zip(edges[:-1], edges[1:]):
+        m = (confs > lo) & (confs <= hi)
+        if m.any():
+            ece += m.sum() / n * abs(correct[m].mean() - confs[m].mean())
+    return ece
 
 
 @torch.no_grad()
@@ -66,6 +87,8 @@ def main():
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--limit-per-class", type=int, default=None, help="must match training")
     parser.add_argument("--suffix", default="", help="extra checkpoint-name suffix, e.g. _imagenet")
+    parser.add_argument("--source", choices=["ras", "ekush", "matrivasha"], default=None,
+                        help="score single-source runs; must match how they were trained")
     parser.add_argument("--per-class", action="store_true", help="print sklearn classification_report")
     parser.add_argument("--confusion", action="store_true", help="write confusion_{arch}.png")
     parser.add_argument("--out", default="results.csv")
@@ -73,7 +96,8 @@ def main():
 
     # Same naming rule as train_arch.py: --limit-per-class 300 scores the capped run,
     # no flag scores the full-data run.
-    tag = (f"_lpc{args.limit_per_class}" if args.limit_per_class else "") + args.suffix
+    tag = (f"_{args.source}" if args.source else "")
+    tag += (f"_lpc{args.limit_per_class}" if args.limit_per_class else "") + args.suffix
     ckpt_of = lambda a: CHECKPOINTS / f"{a}_merged{tag}.pth"
 
     archs = args.arch or [a for a in EVAL_BUILDERS if ckpt_of(a).exists()]
@@ -86,6 +110,9 @@ def main():
 
     device = pick_device()
     samples, classes = build_manifest()
+    if args.source:
+        from train_arch import restrict_to_source
+        samples, classes = restrict_to_source(samples, classes, args.source)
     _, _, test_samples = stratified_split(samples, limit_per_class=args.limit_per_class)
     print(f"Test set: {len(test_samples)} images, {len(classes)} classes | device {device}\n")
 
@@ -107,14 +134,18 @@ def main():
         model.to(device)
 
         t0 = time.time()
-        preds, labels = predict(model, loader, device)
-        acc = (preds == labels).mean()
+        preds, labels, confs, nll = predict(model, loader, device)
+        correct = preds == labels
+        acc = correct.mean()
 
         row = {
             "method": arch,
             "test_acc": round(float(acc), 4),
             "CER": round(float(1 - acc), 4),
             "macro_f1": round(float(f1_score(labels, preds, average="macro", zero_division=0)), 4),
+            "NLL": round(float(nll), 4),
+            "ECE": round(float(expected_calibration_error(confs, correct)), 4),
+            "mean_conf": round(float(confs.mean()), 4),
             "params_M": round(sum(p.numel() for p in model.parameters()) / 1e6, 2),
             "ckpt_MB": round(ckpt_path.stat().st_size / 1e6, 1),
             "cpu_ms_per_img": round(cpu_latency_ms(model, img_size), 1),
