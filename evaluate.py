@@ -161,6 +161,25 @@ def main():
             print(f"\n--- {arch} per-class ---")
             print(classification_report(labels, preds, labels=range(len(names)),
                                         target_names=names, zero_division=0))
+
+            # saved for the paper's appendix, and to rank confusable pairs
+            from sklearn.metrics import precision_recall_fscore_support
+            pr, rc, f1, sup = precision_recall_fscore_support(
+                labels, preds, labels=range(len(names)), zero_division=0)
+            pd.DataFrame({"class": names, "precision": pr.round(4), "recall": rc.round(4),
+                          "f1": f1.round(4), "support": sup}).sort_values("support").to_csv(
+                f"per_class_{arch}{tag}.csv", index=False)
+
+            cm = confusion_matrix(labels, preds, labels=range(len(names)))
+            np.fill_diagonal(cm, 0)
+            pairs = [(cm[i, j], names[i], names[j])
+                     for i, j in zip(*np.nonzero(cm))]
+            pairs.sort(reverse=True)
+            print(f"\nMost-confused pairs ({arch}) — true → predicted:")
+            for n, t, p_ in pairs[:15]:
+                print(f"  {t} → {p_}   {n} images")
+            pd.DataFrame(pairs, columns=["count", "true", "predicted"]).to_csv(
+                f"confusions_{arch}{tag}.csv", index=False)
         if args.confusion:
             import matplotlib
             matplotlib.use("Agg")

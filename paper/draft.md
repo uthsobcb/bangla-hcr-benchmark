@@ -684,7 +684,49 @@ glyphs, while Ekush is natively 28×28. Image quality dominates corpus size here
 inverts this completely (0.013 on RAS-Compound, 0.707 on Ekush), because without a pretrained prior
 it learns only what it sees in quantity.
 
-`[TODO — produced by evaluate.py --per-class --confusion]` Remaining: report accuracy disaggregated by source
+**Rare classes are the easiest, not the hardest.** The 27 classes with fewer than 100 images reach a
+mean per-class F1 of **0.9966** (ExtendedViT; 0.9925 for ResNet18) against **0.9758** for the 229
+well-populated classes — and all 27 achieve F1 = 1.0. This inverts the usual expectation and follows
+directly from the confound established in Section 3.2: those 27 classes are contributed solely by
+RAS-Compound, whose images are high-resolution and cleanly binarised, and no other corpus supplies a
+competing rendering of them. Their scarcity is an artifact of source size, while their separability
+comes from image quality. On this benchmark, therefore, **macro-F1 does not measure long-tail
+performance**, and neither macro-F1 nor per-class accuracy should be read as evidence about rare
+conjuncts. We report macro-F1 as a descriptive statistic only.
+
+**Errors concentrate on minimally different conjunct pairs.** Only 7 of 256 classes fall below F1
+0.90. The most-confused pairs are near-identical, and both architectures fail on essentially the
+same ones:
+
+**Table 9. Most-confused class pairs, full corpus (ExtendedViT / ResNet18 error counts).**
+
+| True → Predicted | ExtendedViT | ResNet18 | What differs |
+|---|---:|---:|---|
+| ন্ড্র → ণ্ড্র | 33 | 25 | dental ন vs retroflex ণ |
+| ণ্ড্র → ন্ড্র | 24 | 28 | the same pair, reversed |
+| ম্ভ্র → ন্ত্র | 32 | 26 | both components |
+| ত্ত → ও | 25 | 26 | conjunct resembling a vowel |
+| ম্ন → ম্ম | 19 | 19 | ন vs ম as second component |
+| ন্ঢ → ন্ট | 15 | 16 | ঢ vs ট |
+| শ্ন → শ্ম | 12 | 13 | ন vs ম as second component |
+| ন্ব → ণ্ব | 12 | 12 | dental ন vs retroflex ণ |
+| ত্থ → থ | 12 | — | conjunct vs its own second component |
+| ২ → হ | 13 | 13 | digit against a consonant |
+
+Three systematic patterns emerge. First, the **dental/retroflex nasal contrast** (ন vs ণ) accounts
+for the single largest error source, and it is symmetric — the confusion runs in both directions,
+indicating genuine visual ambiguity rather than a class prior. Second, **ন vs ম as a second
+component** recurs across otherwise unrelated conjuncts. Third, conjuncts are confused with **their
+own constituents** (ত্থ → থ) or with visually similar non-conjuncts (ত্ত → ও, ২ → হ), which is a
+failure of compositional structure rather than of stroke detection.
+
+That both architectures fail on the same pairs, in similar proportions, indicates these errors are
+properties of the data rather than of the model — consistent with the near-identical aggregate
+accuracies of Table 3, and with the inter-class similarity the literature identifies as the field's
+persistent obstacle [17], [23], [32]. Full per-class results are in Appendix C; confusion matrices
+are `paper/confusion_full_*.png`.
+
+**Per-source accuracy inverts corpus size.**
 corpus to establish whether the merge benefits all three; report macro-F1 against accuracy to
 quantify performance on the 27 rare classes; include confusion matrices for the two leading models,
 focusing on the structurally similar conjunct pairs that the literature identifies as the persistent
@@ -837,7 +879,7 @@ train/validation/test partition is derived deterministically from a fixed seed (
 per-class shuffle, so the partition is identical for every run reported here and can be regenerated
 exactly.
 
-**Table 9. Complete training configuration.**
+**Table 10. Complete training configuration.**
 
 | Setting | Value |
 |---|---|
@@ -925,14 +967,30 @@ preparing the manuscript or code. State what was used and for what.]`
 
 ## Appendix B. Class Inventory
 
-`[FILL: the full 256-class list with each character's Unicode code points and its source corpora —
-generate from the manifest. This belongs in supplementary material rather than the body.]`
+The complete inventory is released as `class_inventory.csv` (256 rows): index, character, Unicode
+code points, Unicode character names, contributing corpora, and image count. It is intended as
+supplementary material rather than body text.
+
+Classes range from a single code point (e.g. ঁ, U+0981 BENGALI SIGN CANDRABINDU) to five
+(ত + ্ + র + ্ + য-type conjuncts), reflecting that a conjunct is encoded as a consonant sequence
+joined by U+09CD BENGALI SIGN VIRAMA rather than as an atomic code point. This is precisely why
+label reconciliation must operate on NFC-normalised grapheme strings rather than on folder indices
+(Section 3.2). Of the 256 classes, 97 are attested in more than one corpus and 159 in exactly one.
 
 ## Appendix C. Per-Class Results
 
-`[TODO: sklearn classification report for the leading model, precision/recall/F1 per class,
-sorted ascending by support so the 27 rare classes are legible. Produced by
-`evaluate.py --per-class`.]`
+Per-class precision, recall, F1 and support for both leading models on the full corpus are released
+as `per_class_extended_vit.csv` and `per_class_resnet18.csv`, sorted ascending by support. The
+complete ranked confusion lists are `confusions_extended_vit.csv` and `confusions_resnet18.csv`.
+All four regenerate with:
+
+```bash
+python evaluate.py --arch extended_vit resnet18 --per-class --confusion
+```
+
+Summary: 27 classes at F1 = 1.000 (ExtendedViT) and 25 (ResNet18); 7 and 6 classes respectively
+below F1 0.90; worst classes ন্ড্র (0.8652) and ণ্ড্র (0.8814) — the two halves of the same
+dental/retroflex confusion discussed in Section 5.10.
 
 ---
 
