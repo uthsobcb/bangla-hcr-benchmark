@@ -18,13 +18,14 @@ import torch
 from torch.utils.data import DataLoader
 
 from train_merged import (
-    CHECKPOINTS, build_manifest, stratified_split,
+    CHECKPOINTS, ROOT, build_manifest, stratified_split,
     CharDataset, build_transforms, pick_device,
 )
 from train_arch import EVAL_BUILDERS, build_for_eval
 
 SOURCES = {"RAS-Compound-character-dataset": "RAS", "ekush-dataset": "Ekush",
            "MatriVasha_Dataset": "MatriVasha"}
+RESULTS = ROOT / "results"   # every generated table and matrix lands here
 
 
 def source_of(path):
@@ -91,7 +92,7 @@ def main():
                         help="score single-source runs; must match how they were trained")
     parser.add_argument("--per-class", action="store_true", help="print sklearn classification_report")
     parser.add_argument("--confusion", action="store_true", help="write confusion_{arch}.png")
-    parser.add_argument("--out", default="results.csv")
+    parser.add_argument("--out", default="results.csv", help="filename inside results/")
     args = parser.parse_args()
 
     # Same naming rule as train_arch.py: --limit-per-class 300 scores the capped run,
@@ -108,6 +109,7 @@ def main():
     if not archs:
         raise SystemExit(f"No *_merged{tag}.pth checkpoints in checkpoints/ — nothing to evaluate")
 
+    RESULTS.mkdir(exist_ok=True)
     device = pick_device()
     samples, classes = build_manifest()
     if args.source:
@@ -168,7 +170,7 @@ def main():
                 labels, preds, labels=range(len(names)), zero_division=0)
             pd.DataFrame({"class": names, "precision": pr.round(4), "recall": rc.round(4),
                           "f1": f1.round(4), "support": sup}).sort_values("support").to_csv(
-                f"per_class_{arch}{tag}.csv", index=False)
+                RESULTS / f"per_class_{arch}{tag}.csv", index=False)
 
             cm = confusion_matrix(labels, preds, labels=range(len(names)))
             np.fill_diagonal(cm, 0)
@@ -179,7 +181,7 @@ def main():
             for n, t, p_ in pairs[:15]:
                 print(f"  {t} → {p_}   {n} images")
             pd.DataFrame(pairs, columns=["count", "true", "predicted"]).to_csv(
-                f"confusions_{arch}{tag}.csv", index=False)
+                RESULTS / f"confusions_{arch}{tag}.csv", index=False)
         if args.confusion:
             import matplotlib
             matplotlib.use("Agg")
@@ -190,14 +192,15 @@ def main():
             plt.xlabel("Predicted"), plt.ylabel("True")
             plt.title(f"{arch} — CER {1-acc:.4f}")
             plt.tight_layout()
-            plt.savefig(f"confusion_{arch}.png", dpi=120)
+            plt.savefig(RESULTS / f"confusion_{arch}{tag}.png", dpi=120)
             plt.close()
-            print(f"  wrote confusion_{arch}.png")
+            print(f"  wrote results/confusion_{arch}{tag}.png")
 
     df = pd.DataFrame(rows).sort_values("test_acc", ascending=False)
     print("\n" + df.to_string(index=False))
-    df.to_csv(args.out, index=False)
-    print(f"\nWrote {args.out}")
+    out = RESULTS / args.out
+    df.to_csv(out, index=False)
+    print(f"\nWrote {out}")
 
 
 if __name__ == "__main__":

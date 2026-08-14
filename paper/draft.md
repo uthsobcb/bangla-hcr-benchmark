@@ -821,7 +821,7 @@ That both architectures fail on the same pairs, in similar proportions, indicate
 properties of the data rather than of the model — consistent with the near-identical aggregate
 accuracies of Table 3, and with the inter-class similarity the literature identifies as the field's
 persistent obstacle [17], [23], [32]. Full per-class results are in Appendix C; confusion matrices
-are `paper/confusion_full_*.png`.
+are `results/confusion_full_*.png`.
 
 **Per-source accuracy inverts corpus size.**
 corpus to establish whether the merge benefits all three; report macro-F1 against accuracy to
@@ -1078,8 +1078,8 @@ label reconciliation must operate on NFC-normalised grapheme strings rather than
 ## Appendix C. Per-Class Results
 
 Per-class precision, recall, F1 and support for both leading models on the full corpus are released
-as `per_class_extended_vit.csv` and `per_class_resnet18.csv`, sorted ascending by support. The
-complete ranked confusion lists are `confusions_extended_vit.csv` and `confusions_resnet18.csv`.
+as `results/per_class_extended_vit.csv` and `results/per_class_resnet18.csv`, sorted ascending by
+support. The complete ranked confusion lists are `results/confusions_*.csv`.
 All four regenerate with:
 
 ```bash

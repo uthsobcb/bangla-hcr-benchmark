@@ -1,9 +1,10 @@
-"""Generate paper figures.
+"""Generate the paper's figures into paper/fig*.png.
 
     ./venv/bin/python paper/figures.py
 
-Writes into paper/: fig1_workflow.png (diagrams/graphviz), fig2_dataset.png (matplotlib),
-fig3_architecture.png (matplotlib). Figure 1 needs graphviz on PATH (`brew install graphviz`).
+Figures 1-5 come from the dataset and the architecture; 6-11 are read back from logs/ and
+results/, so re-running after new experiments refreshes them with no edits. Figure 1 needs
+graphviz on PATH (`brew install graphviz`); everything else is matplotlib.
 """
 from pathlib import Path
 
@@ -582,7 +583,7 @@ def _sweep_metrics():
     out = {}
     for budget in SWEEP_BUDGETS:
         for suffix in ("", "_seed1", "_seed2"):
-            f = OUT.parent / f"results_sweep_{budget}{suffix}.csv"
+            f = OUT.parent / "results" / f"results_sweep_{budget}{suffix}.csv"
             if not f.exists():
                 continue
             for _, r in pd.read_csv(f).iterrows():
@@ -652,7 +653,7 @@ def fig11_cross_source():
     import numpy as np
     import pandas as pd
 
-    f = OUT.parent / "cross_source_results.csv"
+    f = OUT.parent / "results" / "cross_source_results.csv"
     if not f.exists():
         raise FileNotFoundError(f)
     df = pd.read_csv(f)

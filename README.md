@@ -103,15 +103,40 @@ logs and keep every output inline, which the plain scripts do not. Training itse
 | `02-training-and-results.ipynb` | full training logs, results tables, Figs 6/7/9, confusion matrices |
 | `03-attention-and-inference.ipynb` | architecture trace, CLS attention (Fig 8), CPU latency |
 
-## Files
+## Layout
 
-| file | role |
-|---|---|
-| `train_merged.py` | data pipeline: manifest, split, transforms, train loop, `ExtendedViT` |
-| `train_arch.py` | `--arch` CLI for all four methods + checkpoint-loading builders |
-| `evaluate.py` | shared-split scoring → `results.csv` |
-| `predict_word.py` | word segmentation + inference |
-| `dashboard.py` / `progress.sh` | live training status |
-| `paper/figures.py` | all paper figures |
-| `paper/make_notebooks.py` | builds and executes the notebooks above |
-| `notebooks/archive-*.ipynb` | original single-dataset (RAS-only) experiments |
+```
+train_merged.py        shared data pipeline (library): manifest, seed-42 split, transforms,
+                       ExtendedViT, epoch loop. Every entry point imports it, which is what
+                       keeps the architectures comparable.
+train_arch.py          training CLI for all four architectures
+evaluate.py            scoring on the shared split -> results/
+cross_source.py        train on one corpus, test on another
+temperature_scaling.py post-hoc calibration control
+predict_word.py        word segmentation + inference
+dashboard.py           live training dashboard at localhost:8765
+progress.sh            one-shot / watch training status
+
+data/                  the three corpora (not in git)
+checkpoints/           trained weights (not in git)
+logs/                  training logs (not in git)
+results/               every generated table and confusion matrix (in git)
+paper/                 draft, figures, build scripts
+notebooks/             01-03 analysis notebooks, plus archived earlier experiments
+```
+
+`*_merged.pth` is the best checkpoint for a run; `*_last.pth` additionally stores optimiser
+state and exists only so `--resume` works. Once a run is finished its `_last` file can be
+deleted — together they account for most of `checkpoints/`.
+
+## Cross-corpus and calibration experiments
+
+```bash
+./venv/bin/python cross_source.py --train ekush --test ras --arch resnet18
+./venv/bin/python temperature_scaling.py --source ekush --limit-per-class 50
+```
+
+The first trains on one corpus and evaluates on another over the classes they share — the
+experiment behind the paper's central finding. The second fits a single temperature on
+validation logits and reports ECE before and after, which is the control that determines
+whether a calibration difference is architectural.

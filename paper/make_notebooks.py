@@ -171,9 +171,10 @@ for stem, cond in RUNS:
 """),
     md("## Results tables"),
     code("""
-for csv, title in [('../results_lpc300.csv', 'Equal budget (300 per class)'),
-                   ('../results_lpc300_imagenet.csv', 'Equal budget, ImageNet-init ablation'),
-                   ('../results_full.csv', 'Full corpus')]:
+for csv, title in [('../results/results_lpc300.csv', 'Equal budget (300 per class)'),
+                   ('../results/results_lpc300_imagenet.csv', 'Equal budget, ImageNet-init ablation'),
+                   ('../results/results_full.csv', 'Full corpus'),
+                   ('../results/cross_source_results.csv', 'Cross-corpus generalisation')]:
     print(f'\\n### {title}')
     try:
         print(pd.read_csv(csv).to_string(index=False))
@@ -195,7 +196,7 @@ for f in ('fig6_training_curves', 'fig7_results', 'fig9_efficiency'):
     code("""
 from IPython.display import Image, display
 import glob
-found = sorted(glob.glob('../paper/confusion_*.png'))
+found = sorted(glob.glob('../results/confusion_*.png'))
 print(found if found else '(produced by evaluate.py --confusion)')
 for f in found:
     display(Image(f))

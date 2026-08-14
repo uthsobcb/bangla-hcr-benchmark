@@ -1,0 +1,2 @@
+method,test_acc,CER,macro_f1,params_M,ckpt_MB,cpu_ms_per_img,eval_s,acc_Ekush,acc_MatriVasha,acc_RAS
+extended_vit,0.9576,0.0424,0.9609,23.94,95.9,9.3,52.0,0.9541,0.9593,0.9906

@@ -1,0 +1,3 @@
+method,test_acc,CER,macro_f1,NLL,ECE,mean_conf,params_M,ckpt_MB,cpu_ms_per_img,eval_s,acc_Ekush
+extended_vit,0.9262,0.0738,0.9257,0.3795,0.0777,0.8531,23.88,95.6,9.2,34.5,0.9262
+resnet18,0.9213,0.0787,0.9214,0.4882,0.1665,0.7549,11.24,45.0,6.7,33.8,0.9213

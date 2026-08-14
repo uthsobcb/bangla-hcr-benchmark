@@ -27,7 +27,7 @@ from train_merged import (build_manifest, stratified_split, CharDataset, build_t
 from train_arch import ARCHS, SOURCE_DIRS
 
 ROOT = Path(__file__).parent
-RESULTS = ROOT / "cross_source_results.csv"
+RESULTS = ROOT / "results" / "cross_source_results.csv"
 
 
 def split_by_source(samples, classes, train_src, test_src):
@@ -97,6 +97,7 @@ def main():
     print(f"Cross-source test: {te_acc:.4f}  ({args.train} -> {args.test})")
     print(f"Generalisation gap: {best_val - te_acc:+.4f}")
 
+    RESULTS.parent.mkdir(exist_ok=True)
     new = not RESULTS.exists()
     with open(RESULTS, "a", newline="") as f:
         w = csv.writer(f)

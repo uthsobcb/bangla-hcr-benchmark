@@ -2,8 +2,18 @@ venv/
 __pycache__/
 .ipynb_checkpoints/
 .claude
+.DS_Store
+
+# large or regenerable
 data/
 checkpoints/
 logs/
-results*.csv
-confusion_*.png
+
+# build output — regenerate with paper/build.py
+paper/draft.docx
+paper/draft.pdf
+paper/draft_clean.docx
+paper/draft_clean.pdf
+paper/_*.md
+paper/_*.html
+paper/_*.css

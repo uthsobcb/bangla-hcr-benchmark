@@ -1,20 +1,17 @@
-"""Train one ResNet18 on RAS-Compound + Ekush + MatriVasha combined (256 unified classes).
+"""Shared data pipeline for the merged RAS-Compound + Ekush + MatriVasha corpus (256 classes).
 
-Run:
-    python train_merged.py                  # full run, defaults below
-    python train_merged.py --epochs 8 --batch-size 32 --resume
+A library, not a script: manifest building, grapheme-level label reconciliation, the stratified
+seed-42 split, transforms, the ExtendedViT definition, and the train/eval epoch loop. Every
+training entry point (train_arch.py, cross_source.py) imports from here, which is what keeps the
+architectures comparable — they see byte-identical data.
 
-Saves resnet18_merged.pth (same schema as resnet18_ras_only.pth: state_dict,
-class_names, display_names, img_size) so predict_word.py works unchanged with
-`--model checkpoints/resnet18_merged.pth`.
+Run training with:  python train_arch.py --arch {cnn,resnet18,vit,extended_vit}
 """
-import argparse
 import csv
 import os
 import random
 import time
 import unicodedata
-from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -265,92 +262,3 @@ def run_epoch(model, loader, device, criterion, optimizer=None):
             correct += (outputs.argmax(1) == labels).sum().item()
             total += imgs.size(0)
     return total_loss / total, correct / total
-
-
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--epochs", type=int, default=8)
-    parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--lr", type=float, default=3e-4)
-    parser.add_argument("--limit-per-class", type=int, default=None, help="cap samples/class before splitting")
-    parser.add_argument("--workers", type=int, default=min(8, os.cpu_count() or 4))
-    parser.add_argument("--resume", action="store_true", help="continue from resnet18_merged_last.pth")
-    args = parser.parse_args()
-
-    device = pick_device()
-    print("Device:", device)
-
-    print("Scanning datasets...")
-    t0 = time.time()
-    samples, classes = build_manifest()
-    print(f"{len(samples)} images, {len(classes)} classes, scanned in {time.time()-t0:.1f}s")
-
-    train_samples, val_samples, test_samples = stratified_split(samples, limit_per_class=args.limit_per_class)
-    print(f"Train {len(train_samples)} | Val {len(val_samples)} | Test {len(test_samples)}")
-
-    train_tf, eval_tf = build_transforms()
-    train_loader = DataLoader(CharDataset(train_samples, train_tf), batch_size=args.batch_size,
-                               shuffle=True, num_workers=args.workers, persistent_workers=args.workers > 0)
-    val_loader = DataLoader(CharDataset(val_samples, eval_tf), batch_size=args.batch_size,
-                             shuffle=False, num_workers=args.workers, persistent_workers=args.workers > 0)
-    test_loader = DataLoader(CharDataset(test_samples, eval_tf), batch_size=args.batch_size,
-                              shuffle=False, num_workers=args.workers, persistent_workers=args.workers > 0)
-
-    model = build_model(len(classes), device)
-    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
-    optimizer = AdamW([
-        {"params": list(model.parameters())[:-2], "lr": args.lr * 0.1},
-        {"params": model.fc.parameters(), "lr": args.lr},
-    ], weight_decay=1e-4)
-    scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=1e-6)
-
-    start_epoch = 1
-    best_val_acc = 0.0
-    if args.resume and LAST_CHECKPOINT.exists():
-        ckpt = torch.load(LAST_CHECKPOINT, map_location=device, weights_only=False)
-        model.load_state_dict(ckpt["model_state"])
-        optimizer.load_state_dict(ckpt["optimizer_state"])
-        scheduler.load_state_dict(ckpt["scheduler_state"])
-        start_epoch = ckpt["epoch"] + 1
-        best_val_acc = ckpt["best_val_acc"]
-        print(f"Resumed from epoch {ckpt['epoch']}, best_val_acc={best_val_acc:.4f}")
-
-    for epoch in range(start_epoch, args.epochs + 1):
-        t0 = time.time()
-        tr_loss, tr_acc = run_epoch(model, train_loader, device, criterion, optimizer)
-        va_loss, va_acc = run_epoch(model, val_loader, device, criterion)
-        scheduler.step()
-
-        if va_acc > best_val_acc:
-            best_val_acc = va_acc
-            torch.save({
-                "state_dict": deepcopy(model.state_dict()),
-                "class_names": classes,
-                "display_names": classes,
-                "img_size": IMG_SIZE,
-            }, BEST_CHECKPOINT)
-
-        torch.save({
-            "model_state": model.state_dict(),
-            "optimizer_state": optimizer.state_dict(),
-            "scheduler_state": scheduler.state_dict(),
-            "epoch": epoch,
-            "best_val_acc": best_val_acc,
-        }, LAST_CHECKPOINT)
-
-        print(f"Epoch [{epoch:02d}/{args.epochs}] "
-              f"Train Loss: {tr_loss:.4f} Acc: {tr_acc:.4f} | "
-              f"Val Loss: {va_loss:.4f} Acc: {va_acc:.4f} | "
-              f"Time: {time.time()-t0:.1f}s | Best Val: {best_val_acc:.4f}", flush=True)
-
-    print(f"\nBest Validation Accuracy: {best_val_acc:.4f}")
-
-    best = torch.load(BEST_CHECKPOINT, map_location=device, weights_only=False)
-    model.load_state_dict(best["state_dict"])
-    test_loss, test_acc = run_epoch(model, test_loader, device, criterion)
-    print(f"Test Accuracy: {test_acc:.4f} | Test Loss: {test_loss:.4f}")
-    print(f"Saved {BEST_CHECKPOINT.name}")
-
-
-if __name__ == "__main__":
-    main()
