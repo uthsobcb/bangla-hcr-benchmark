@@ -84,11 +84,11 @@ Loads any of the four architectures from the checkpoint's `arch` field. Always C
 
 ## Paper
 
-`paper/draft.md` is the manuscript. Figures and notebooks regenerate from the saved
+The manuscript is `paper/main.tex` + `paper/body.tex` (Elsevier `elsarticle`, build with LuaLaTeX + BibTeX). Figures and notebooks regenerate from the saved
 checkpoints and logs:
 
 ```bash
-./venv/bin/python paper/figures.py           # all 9 figures -> paper/*.png
+./venv/bin/python paper/figures.py           # all 11 figures -> paper/*.png
 ./venv/bin/python paper/make_notebooks.py    # build + execute notebooks 01-03
 ./venv/bin/python paper/make_notebooks.py 01 --no-exec   # build one, don't run it
 ```
@@ -99,9 +99,9 @@ logs and keep every output inline, which the plain scripts do not. Training itse
 
 | notebook | contents |
 |---|---|
-| `01-dataset-analysis.ipynb` | label reconciliation, per-source composition, imbalance, Figs 2/4/5 |
-| `02-training-and-results.ipynb` | full training logs, results tables, Figs 6/7/9, confusion matrices |
-| `03-attention-and-inference.ipynb` | architecture trace, CLS attention (Fig 8), CPU latency |
+| `01-dataset-analysis.ipynb` | label reconciliation, per-source composition, imbalance, fig2/fig4/fig5 files |
+| `02-training-and-results.ipynb` | full training logs, results tables, fig6/fig7/fig9 files, confusion matrices |
+| `03-attention-and-inference.ipynb` | architecture trace, CLS attention (fig8 file), CPU latency |
 
 ## Layout
 

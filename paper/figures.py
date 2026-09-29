@@ -257,7 +257,7 @@ def _parse_log(path):
 
 LOGS = OUT.parent / "logs"
 METHODS = [("cnn", "Scratch CNN", "#C44E52"), ("resnet18", "ResNet18", "#4C72B0"),
-           ("extended_vit", "ExtendedViT (ours)", "#55A868"), ("vit", "ViT-B/16", "#8172B2")]
+           ("extended_vit", "ExtendedViT", "#55A868"), ("vit", "ViT-B/16", "#8172B2")]
 
 
 def fig6_training_curves():
@@ -268,13 +268,15 @@ def fig6_training_curves():
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
     # the three pretrained models sit within 2 points of each other, invisible on a 0-1 axis
-    inset = ax1.inset_axes([0.42, 0.30, 0.55, 0.42])
+    inset = ax1.inset_axes([0.50, 0.28, 0.47, 0.42])
     partial = []
     for key, label, color in METHODS:
         rows = _parse_log(LOGS / f"{key}.log")
         if not rows:
             continue
         ep = [r[0] for r in rows]
+        if key == "extended_vit":
+            label = "ExtendedViT (warm-started)"
         ax1.plot(ep, [r[4] for r in rows], "-o", color=color, ms=3.5, lw=1.6, label=label)
         ax2.plot(ep, [r[3] for r in rows], "-o", color=color, ms=3.5, lw=1.6, label=label)
         if key != "cnn":
@@ -290,7 +292,7 @@ def fig6_training_curves():
     ax1.set_xlabel("Epoch"), ax1.set_ylabel("Validation accuracy")
     ax1.set_title("(a) Validation accuracy", fontsize=11, loc="left")
     ax1.set_ylim(0, 1.05)
-    ax1.legend(fontsize=8.5, loc="upper left", frameon=False, bbox_to_anchor=(0, .92))
+    ax1.legend(fontsize=8, loc="lower left", frameon=False, bbox_to_anchor=(0, .24))
     ax2.set_xlabel("Epoch"), ax2.set_ylabel("Validation loss")
     ax2.set_title("(b) Validation loss", fontsize=11, loc="left")
     ax2.legend(fontsize=8.5, frameon=False)
@@ -521,6 +523,9 @@ def fig9_efficiency():
         rows = _parse_log(LOGS / f"{key}.log")
         if rows:
             acc[key] = max(r[4] for r in rows)
+    clean = _parse_log(LOGS / "extended_vit_imagenet.log")
+    if clean:
+        acc["extended_vit"] = max(r[4] for r in clean)
 
     fig, ax = plt.subplots(figsize=(7.6, 4.8))
     torch.set_num_threads(1)  # one thread: comparable, and typical of a constrained deployment
@@ -549,7 +554,7 @@ def fig9_efficiency():
                     ha="center", fontsize=8.5, color=color, zorder=4)
 
     ax.set_xscale("log")
-    ax.set_xlim(2.6, 130)
+    ax.set_xlim(2.0, 130)
     ax.set_ylim(0.08, 1.14)
     ax.set_xticks([5, 10, 20, 50, 100])
     ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
@@ -602,7 +607,7 @@ def fig10_data_efficiency_sweep():
     import matplotlib.pyplot as plt
     import statistics as st
 
-    ARCHS_ = [("resnet18", "ResNet18", "#4C72B0"), ("extended_vit", "ExtendedViT (ours)", "#55A868")]
+    ARCHS_ = [("resnet18", "ResNet18", "#4C72B0"), ("extended_vit", "ExtendedViT", "#55A868")]
     m = _sweep_metrics()
 
     def series(arch, key):
