@@ -55,7 +55,7 @@ single-corpus accuracies reported throughout the literature.
 
 \textbf{Four architectures under one protocol.} A from-scratch CNN, a
 fine-tuned ImageNet ResNet18, a fine-tuned ViT-B/16 and ExtendedViT, a
-ResNet18--Transformer hybrid (below), are trained and evaluated on a
+ResNet18--\allowbreak Transformer hybrid (below), are trained and evaluated on a
 byte-identical split at two data budgets (ViT-B/16 at the equal budget
 only; Section 4.1). ViT-B/16 leads at the equal budget, reproducing on compound
 characters the ordering Parvez et al.~\citeyearpar{ref17} reported for basic
@@ -87,25 +87,11 @@ correctable post hoc and should always be reported temperature-scaled
 \hypertarget{literature-review}{%
 \section{Literature Review}\label{literature-review}}
 
-\hypertarget{introduction-to-bangla-handwritten-character-recognition-and-its-challenges}{%
-\subsection{Introduction to Bengali Handwritten Character Recognition
-and Its
-Challenges}\label{introduction-to-bangla-handwritten-character-recognition-and-its-challenges}}
-
-Beyond the figures given in Section 1, Bengali (Bangla) has about 233 million native speakers, making it the fifth most spoken Indo-European language \citep{ekushnetnote}, and its 50 basic characters are complemented by more than 170 conjunct consonants formed by combining two or more of them \citep{ref7}.
-
-Handwritten character recognition (HCR) for Bengali is uniquely
-challenging for several reasons that recur throughout the reviewed
-literature: (i) the cursive nature of the script and the connecting
-head-line; (ii) very high inter-class similarity, where two
-distinct characters may differ only by a single dot or mark \citep{ref32};
-(iii) substantial writing-style variability across individuals; (iv)
-data scarcity for the long tail of compound characters; and (v) class
-imbalance, since character frequency in natural Bengali text
-approximately follows Zipf's law, leaving many compound classes rare
-\citep{ref33}. These factors make Bengali a canonical example of a complex,
-low-resource script for which OCR/HCR systems still lag behind those
-developed for Latin scripts \citep{ref21,ref26}.
+The recognition difficulties summarised in Section 1 (the head-line, high
+inter-class similarity, writing-style variation, and a Zipf-distributed
+long tail of compound classes) recur throughout the literature
+\citep{ref21,ref26,ref32,ref33}; this section reviews how successive
+approaches have addressed them.
 
 \hypertarget{traditional-and-classical-approaches}{%
 \subsection{Traditional and Classical
@@ -213,6 +199,16 @@ suited to fine structural detail \citep{ref42}. Hybrid designs such as
 ResViT \citep{ref19} and the EfficientNetB3--ViT--Conformer model
 \citep{ref25} combine local convolutional features with global attention
 \emph{in parallel}.
+The relevance of such priors follows from Dosovitskiy et
+al.~\citeyearpar{ref22}: ViT trails a comparably sized ResNet when trained
+on ImageNet-1k alone, becomes comparable with ImageNet-21k pretraining,
+and surpasses it only at JFT-300M scale, so for a low-resource script a
+pure ViT is the least favourable architecture unless a strong prior is
+supplied externally. ExtendedViT, evaluated here as a baseline, composes
+the two \emph{serially} instead, using convolution to produce the token
+sequence that attention operates over; this is the hybrid variant described
+in the original ViT paper's appendix, not previously evaluated on this
+script.
 
 \hypertarget{compound-character-recognition}{%
 \subsection{Compound Character
@@ -318,22 +314,6 @@ standard protocol, which, to the authors' knowledge, has not been
 systematically applied to Bengali compound characters. That is the gap
 Section 4.6 addresses.
 
-Two points from the sections above bear directly on the design that
-follows and are worth restating here. Dosovitskiy et al.~\citeyearpar{ref22} show
-that ViT trails a comparably sized ResNet when trained on ImageNet-1k
-alone, becomes comparable with ImageNet-21k pretraining, and only
-surpasses it at JFT-300M scale: large-scale pretraining trumps
-inductive bias. For a low-resource script, the corollary is that a pure
-ViT is the \emph{least} favourable architecture unless a strong prior is
-supplied externally. The hybrid designs that do exist for Bengali,
-ResViT \citep{ref19} and the EfficientNetB3--ViT--Conformer of Raquib et
-al.~\citeyearpar{ref25}, combine CNN and transformer branches \emph{in parallel}
-and fuse their outputs. ExtendedViT instead composes them
-\emph{serially}, using convolution to produce the token sequence that
-attention then operates over, which is the hybrid variant described in
-the original ViT paper's appendix but not previously evaluated on this
-script.
-
 \hypertarget{summary-of-benchmark-datasets}{%
 \subsection{Summary of Benchmark
 Datasets}\label{summary-of-benchmark-datasets}}
@@ -347,11 +327,11 @@ relevance to compound-character recognition.
 \footnotesize
 \caption{Benchmark datasets for Bengali handwritten
 character and grapheme recognition.}
-\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}}
 \toprule
 \begin{minipage}[b]{\linewidth}\raggedright
 Dataset
@@ -410,11 +390,11 @@ results rather than a directly comparable leaderboard (see Section
 \footnotesize
 \caption{Representative prior methods and reported
 accuracies.}
-\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1600}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1300}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2600}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1900}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2600}}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1600}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1300}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2600}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1900}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2600}}}
 \toprule
 \begin{minipage}[b]{\linewidth}\raggedright
 Method (year)
@@ -520,7 +500,7 @@ transformers \citep{ref42} exist.
 
 Seventh, and closest to this paper's own contribution: \emph{no
 systematic cross-corpus evaluation exists for Bengali handwritten
-characters.} Multi-benchmark reporting is common (Section 2.7), but
+characters.} Multi-benchmark reporting is common (Section 2.6), but
 train-on-one/test-on-another transfer is essentially unmeasured, leaving
 open whether reported accuracies reflect character recognition or corpus
 familiarity. Section 4.6 addresses this gap directly.
@@ -609,11 +589,11 @@ diversity.
 \centering
 \footnotesize
 \caption{Composition of the unified corpus.}
-\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1579}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2105}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2105}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2105}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2105}}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1579}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2105}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2105}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2105}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2105}}}
 \toprule
 \begin{minipage}[b]{\linewidth}\raggedright
 Source
@@ -969,14 +949,14 @@ is additionally disaggregated by source corpus. ECE is included because cross-en
 \footnotesize
 \caption{Full corpus (681,309 images, 256 classes; 68,010 test
 images). RAS = RAS-Compound.}
-\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0968}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1290}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1290}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1290}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1290}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1290}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1290}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1290}}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.0968}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1290}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1290}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1290}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1290}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1290}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1290}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1290}}}
 \toprule
 \begin{minipage}[b]{\linewidth}\raggedright
 Method
@@ -1033,12 +1013,12 @@ class)}\label{equal-budget-300-images-per-class}}
 \footnotesize
 \caption{Equal budget (70,484 images, 256 classes, 300 max per
 class; 7,035 test images).}
-\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1364}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1818}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1818}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1818}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1818}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1364}}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1364}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1818}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1818}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1818}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1818}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1364}}}
 \toprule
 \begin{minipage}[b]{\linewidth}\raggedright
 Method
@@ -1278,13 +1258,13 @@ a Bengali checkpoint would leak the target corpus into the source model.
 \footnotesize
 \caption{Cross-corpus generalisation (300 images per class,
 shared classes only). The 300 cap applies to the source corpus before its 80/10/10 split; the target test set is every target image of the shared classes. Same-corpus val is the best validation accuracy over training, on the split also used for model selection.}
-\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1154}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1154}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1538}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1538}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1538}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1538}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1538}}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1154}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1154}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1538}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1538}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1538}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1538}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1538}}}
 \toprule
 \begin{minipage}[b]{\linewidth}\raggedright
 Architecture
@@ -1428,11 +1408,11 @@ Results}\label{comparison-with-prior-published-results}}
 \footnotesize
 \caption{Positioning against prior Bengali character recognition
 work.}
-\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2353}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2353}}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1765}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1765}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1765}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2353}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2353}}}
 \toprule
 \begin{minipage}[b]{\linewidth}\raggedright
 Study
@@ -1558,7 +1538,7 @@ supplementary material.
 
 
 \hypertarget{discussion}{%
-\subsection{Discussion}\label{discussion}}
+\section{Discussion}\label{discussion}}
 
 \textbf{Corpus versus architecture.} The dominant effect is the corpus, not the architecture.
 Section 4.6 puts the architecture comparison in proportion. Every
@@ -1601,7 +1581,7 @@ ResViT reports 97.21\% on BanglaLekha-Isolated \citep{ref19} and
 CompoundDenseNet 96.2--98.5\% across three benchmarks \citep{ref23}, both on
 smaller class inventories than the 256 used here.
 
-\textbf{Threats to validity.}
+\subsection{Threats to Validity}\label{threats-to-validity}
 
 \emph{Inherited initialisation.} Both pretrained models initially inherited previously trained Bengali weights (ResNet18 from a
 RAS-only checkpoint, ExtendedViT from the full-corpus ResNet18), which
@@ -1631,7 +1611,9 @@ and a replication without smoothing would strengthen the claim.
 fine-tuning but may underserve the scratch CNN, whose 0.2115 should be
 read as its 8-epoch result at that budget rather than a ceiling.
 
-\textbf{Limitations.} Evaluation is on isolated characters; performance
+\subsection{Limitations}\label{limitations}
+
+Evaluation is on isolated characters; performance
 within connected words, where segmentation error compounds
 classification error, is not measured, and it is precisely there that calibration, raw or temperature-scaled, would have to be shown to matter practically. The sweep uses one corpus, so whether the calibration
 effect generalises across image conventions is untested. The corpora may
@@ -1703,8 +1685,8 @@ reported here and can be regenerated exactly.
 \centering
 \footnotesize
 \caption{Complete training configuration.}
-\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.5000}}}
 \toprule
 \begin{minipage}[b]{\linewidth}\raggedright
 Setting
@@ -1735,12 +1717,9 @@ Inference measurement & Apple M4 CPU, single image, one thread \\
 \end{table*}
 
 
-Figure 12 lists the commands that reproduce every result.
+Listing 1 gives the commands that reproduce every result.
 
-\begin{figure*}[htbp]
-\centering
-\small
-\begin{verbatim}
+\begin{lstlisting}[caption={Commands to reproduce every result.},label=lst:repro]
 python train_arch.py \
     --arch {cnn,resnet18,vit,extended_vit} \
     [--limit-per-class 300] [--no-warm-start]
@@ -1755,9 +1734,7 @@ python evaluate.py --source ekush --limit-per-class N \
     --suffix _imagenet[_seed{1,2}] --out results/results_sweep_N.csv
 python temperature_scaling.py --source ekush --limit-per-class {50,100}
 python paper/figures.py
-\end{verbatim}
-\caption{Commands to reproduce every result.}
-\end{figure*}
+\end{lstlisting}
 
 Code, trained checkpoints, and the label-reconciliation mapping files
 are released with this paper (see Code availability below).
@@ -1777,9 +1754,12 @@ label-reconciliation mapping files (\texttt{ras\_class\_mapping.csv},
 \texttt{matrivasha\_mapping.csv}) and the manifest-construction code
 that reproduces the unified corpus are released with this paper.
 
+\textbf{Funding.} This research did not receive any specific grant from
+funding agencies in the public, commercial, or not-for-profit sectors.
+
 \textbf{Code availability.} The training, evaluation, cross-corpus and
 figure-generation code, the trained checkpoints, and the commands in
-Figure 12 are released with this paper.
+Listing 1 are released with this paper.
 
 \textbf{Acknowledgements.} The authors thank the creators of
 RAS-Compound, Ekush, and MatriVasha for releasing their data publicly,
@@ -1805,8 +1785,8 @@ Table 14 lists the symbols used in Section 3.4.
 \caption{Notation.}
 \centering
 \footnotesize
-\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.5000}}}
 \toprule
 \begin{minipage}[b]{\linewidth}\raggedright
 Symbol

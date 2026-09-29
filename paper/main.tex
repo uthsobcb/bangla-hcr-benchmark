@@ -32,6 +32,8 @@
             urlcolor=blue!55!black,
             breaklinks=true]{hyperref}
 \usepackage{cleveref}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\small,breaklines=true,columns=fullflexible,frame=tb,captionpos=t}
 
 \journal{Natural Language Processing Journal}
 
@@ -44,9 +46,9 @@
 \author[inst1]{Uthsob Chakraborty\corref{cor1}}
 \ead{chakraborty2305341621@diu.edu.bd}
 \author[inst1]{Tonmoy Biswas}
-\ead{chakraborty2305341621@diu.edu.bd}
+\ead{biswas2305341006@diu.edu.bd}
 \author[inst1]{Md. Shihab Uddin}
-\ead{chakraborty2305341621@diu.edu.bd}
+\ead{uddin2305341102@diu.edu.bd}
 \author[inst2]{Utshob Bose}
 \ead{utshob.bose@g.bracu.ac.bd}
 
@@ -55,7 +57,7 @@
 \address[inst2]{BRAC University, Dhaka, Bangladesh}
 
 \begin{abstract}
-Bengali compound characters, formed by conjoining two or more consonants, comprise more than 170 mutually confusable glyphs, and progress on recognising them is limited less by architecture than by fragmented corpora with partially overlapping classes. Three public corpora (RAS-Compound, Ekush, and MatriVasha) are unified into a 256-class benchmark of 681,309 images, with labels reconciled by Unicode NFC normalisation rather than folder indices; the resulting imbalance is an artifact of source size, not character frequency. Four architectures share one protocol: a from-scratch CNN, fine-tuned ResNet18 and ViT-B/16, and ExtendedViT, a hybrid that tokenises images with an ImageNet-pretrained ResNet18 for a four-layer Transformer encoder. ViT-B/16 leads at the equal budget of 300 images per class (0.9662); on the full corpus, ResNet18 and ExtendedViT are indistinguishable (0.9764 vs 0.9760). The most consequential result is not architectural: trained on one constituent corpus and tested on another, restricted to shared classes, every model falls from 0.96--1.00 same-corpus accuracy to 0.02--0.05, at or barely above chance, and a label-consistency check attributes this to domain shift rather than label disagreement. Single-corpus accuracy therefore measures corpus familiarity rather than character recognition. A controlled sweep from 50 to 1,000 images per class, with three seeds at the two smallest budgets, finds no significant accuracy difference between ResNet18 and the hybrid, and the hybrid's roughly halved raw calibration error confers no advantage once both models are temperature-scaled. An inherited Bengali checkpoint inflated one equal-budget accuracy by 1.43 points, and macro-F1 does not measure long-tail performance when rarity is confounded with source.
+Bengali compound characters, formed by conjoining two or more consonants, comprise more than 170 mutually confusable glyphs, and progress on recognising them is limited less by architecture than by fragmented corpora with partially overlapping classes. Three public corpora (RAS-Compound, Ekush, and MatriVasha) are unified into a 256-class benchmark of 681,309 images, with labels reconciled by Unicode NFC normalisation rather than folder indices; the resulting imbalance is an artifact of source size, not character frequency. Four architectures share one protocol: a from-scratch CNN, fine-tuned ResNet18 and ViT-B/16, and ExtendedViT, a hybrid that tokenises images with an ImageNet-pretrained ResNet18 for a four-layer Transformer encoder. ViT-B/16 leads at the equal budget of 300 images per class (0.9662); on the full corpus, ResNet18 and ExtendedViT are indistinguishable (0.9764 vs 0.9760). The most consequential result is not architectural: trained on one constituent corpus and tested on another, restricted to shared classes, every model falls from 0.96--1.00 same-corpus accuracy to 0.02--0.05, at or barely above chance, and a label-consistency check attributes this to domain shift rather than label disagreement. Single-corpus accuracy measures corpus familiarity rather than character recognition. A controlled sweep from 50 to 1,000 images per class, with three seeds at the two smallest budgets, finds no significant accuracy difference between ResNet18 and the hybrid, and the hybrid's roughly halved raw calibration error confers no advantage once both models are temperature-scaled. An inherited Bengali checkpoint inflated one equal-budget accuracy by 1.43 points, and macro-F1 does not measure long-tail performance when rarity is confounded with source.
 \end{abstract}
 
 \begin{highlights}
@@ -67,7 +69,7 @@ Bengali compound characters, formed by conjoining two or more consonants, compri
 \end{highlights}
 
 \begin{keyword}
-Bengali handwritten character recognition \sep compound characters \sep cross-corpus generalisation \sep domain shift \sep benchmark \sep Vision Transformer \sep hybrid CNN--Transformer \sep model calibration
+Bengali handwritten character recognition \sep compound characters \sep cross-corpus generalisation \sep domain shift \sep Vision Transformer \sep hybrid CNN--Transformer \sep model calibration
 \end{keyword}
 
 \end{frontmatter}
