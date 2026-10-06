@@ -1,21 +1,9 @@
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
 
-Bengali is the seventh most spoken language in the world, with
-approximately 284 million speakers \citep{ekushnetnote}. Its
-script is an abugida of 11 vowels and 39 consonants, 10 numerals, and an
-open set of compound characters formed by conjoining two or more
-consonants. Counting diacritics and modifiers, roughly 13,000 grapheme
-variations are possible \citep{ref30,ref32}, of which more than 170 are
-conventionally treated as distinct conjunct classes \citep{ref7}.
+Bengali has about 284 million speakers \citep{ekushnetnote} and is the seventh most spoken language in the world. The script is an abugida with 11 vowels, 39 consonants and 10 numerals, plus an open set of compound characters in which two or more consonants are conjoined. Once diacritics and modifiers are counted, roughly 13,000 grapheme variations are possible \citep{ref30,ref32}. More than 170 of them are conventionally treated as distinct conjunct classes \citep{ref7}.
 
-Handwritten recognition of this script is hard for reasons that recur
-across the literature: the cursive connecting head-line that
-binds characters into a visual unit; very high inter-class similarity,
-where two distinct conjuncts may differ by a single stroke or dot; wide
-variation in individual writing style; and a frequency distribution over
-characters that approximately follows Zipf's law, leaving many compound
-classes represented by only a handful of samples \citep{ref33}.
+Handwritten Bengali is hard to recognise for reasons the literature keeps returning to. A cursive head-line binds characters into one visual unit. Two conjuncts can differ by a single stroke or dot. Writing styles vary widely. And because character frequency roughly follows Zipf's law, many compound classes have only a handful of samples \citep{ref33}.
 
 Compound characters concentrate all of these difficulties. Classical
 feature-engineering approaches reached only 79--87\% on compound
@@ -55,12 +43,12 @@ trained and evaluated on a byte-identical split at two data budgets, ViT-B/16 at
 \textbf{A hybrid architecture, evaluated and not sustained.} ExtendedViT uses an ImageNet pre-trained ResNet18 as a learned tokeniser feeding input into a Transformer encoder (Section 3.4). The thorough sweep on a single corpus, performed using class budgets varying from 50 to 1,000 and different seeds, does not provide \emph{any improvement of accuracy regardless of the budget}, whereas the observed double calibration improvement can be entirely accounted for by temperature scaling and, therefore, is not architectural (Section 4.5).
 We thus list it here as a baseline.
 The only advantage of this architecture is speed,
-with 17 ms CPU inference per image as compared with 56 ms of ViT-B/16 with one point of lower accuracy.
+with 13 ms CPU inference per image as compared with 45 ms of ViT-B/16 with one point of lower accuracy.
 
 \textbf{Three methodological caveats.} Each of these three warnings comes as a result of falsification efforts against the statements of this study.
 \emph{Initialisation:} Both pretrained models inherited previously trained Bengali weights,
 which inflated the equal-budget result by 1.43 points and raised first-epoch
-validation accuracy from 0.234 to 0.703 (Section 4.9).
+validation accuracy from 0.867 to 0.953 (Section 4.9).
 \emph{Macro-F1:} In this dataset the rarest classes have the
 \emph{highest} F1 scores because class frequencies are confounded with image quality,
 so macro-F1 is not a suitable tail metric (Section 4.11).
@@ -74,7 +62,7 @@ and should always be temperature scaled (Section 4.5).
 \subsection{Introduction to Bengali Handwritten Character Recognition
 and Its
 Challenges}\label{introduction-to-bangla-handwritten-character-recognition-and-its-challenges}}
-Apart from the numbers mentioned in Section 1, there are around 233 million native speakers of Bengali (Bangla), which makes Bengali the fifth most-spoken Indo-European language \citep{ekushnetnote} and the script consists of 50 basic characters supplemented with more than 170 conjunct consonants made up of combination of two or more basic characters \citep{ref7}.
+Of the roughly 284 million Bengali (Bangla) speakers counted in Section 1, about 242 million are native speakers and about 43 million use it as a second language \citep{ekushnetnote}. The script consists of 50 basic characters supplemented with more than 170 conjunct consonants made up of combination of two or more basic characters \citep{ref7}.
 
 Recognition of handwritten characters in the Bengali language is especially difficult due to certain challenges that are repeatedly mentioned in the reviewed literature: (i) cursive nature of the script and head-line connections; (ii) extremely high inter-class similarity when two distinct characters can differ by just one dot \citep{ref32}; (iii) significant variability in handwriting style of each individual writer; (iv) shortage of data on rare compound characters; and (v) unbalanced data distribution because of Zipfian-like frequency distribution of characters in natural Bengali text \citep{ref33}.
 
@@ -183,59 +171,21 @@ ResViT \citep{ref19} and the EfficientNetB3--ViT--Conformer model
 \subsection{Compound Character
 Recognition}\label{compound-character-recognition}}
 
-Compound-character recognition is consistently treated as a distinct
-and harder problem than basic-character recognition. CompoundDenseNet,
-a modified DenseNet with enhanced feature reuse, reaches 98.5\%, 98\%,
-and 96.2\% on BanglaLekha-Isolated, Ekush, and CMATERdb respectively
-\citep{ref23}, with its authors calling for larger and more diverse
-compound-character datasets. A confidence-guided diffusion augmentation
-pipeline improves ResNet50, DenseNet121, VGG16, and ViT backbones on the
-AIBengali dataset, though the best result (VGG16, 89.2\%) remains notably
-lower than balanced-set results elsewhere \citep{ref24}. Other
-approaches include shape-decomposition segmentation, which reduces the
-effective class count by decomposing glyphs into shape components
-\citep{ref43}; a two-phase pretrain-then-classify DCNN scheme
-\citep{ref35}; and a HOG-CNN hybrid \citep{ref44}.
+Studies consistently treat compound characters as a harder problem than basic characters. CompoundDenseNet, a modified DenseNet with enhanced feature reuse, reaches 98.5\%, 98\%, and 96.2\% on BanglaLekha-Isolated, Ekush, and CMATERdb respectively \citep{ref23}, and its authors call for larger and more diverse compound-character datasets. A confidence-guided diffusion augmentation pipeline improves ResNet50, DenseNet121, VGG16, and ViT backbones on the AIBengali dataset, but the best result (VGG16, 89.2\%) is notably lower than balanced-set results elsewhere \citep{ref24}. Shape-decomposition segmentation reduces the effective class count by splitting glyphs into shape components \citep{ref43}. Two other approaches are a two-phase pretrain-then-classify DCNN scheme \citep{ref35} and a HOG-CNN hybrid \citep{ref44}.
 
-Four challenges recur across these studies: the structural complexity
-of conjuncts formed from two or more basic characters; very high
-inter-class similarity and morphological diversity; severe class
-imbalance, with CMATERdb's compound set explicitly unbalanced unlike
-BanglaLekha-Isolated's near-uniform classes \citep{ref27}; and limited,
-fragmented data across the 170+ compound classes.
+The same four challenges recur across these studies. Conjuncts are structurally complex, since each combines two or more basic characters. Inter-class similarity is very high and the glyphs are morphologically diverse. Class imbalance is severe: CMATERdb's compound set is explicitly unbalanced, while BanglaLekha-Isolated has near-uniform classes \citep{ref27}. Finally, data across the 170+ compound classes is limited and fragmented.
 
 \hypertarget{imagenet-pretraining-and-transfer-learning-for-vision-transformers}{%
 \subsection{ImageNet Pretraining and Transfer Learning for Vision
 Transformers}\label{imagenet-pretraining-and-transfer-learning-for-vision-transformers}}
 
-In Bengali HCR specifically, ImageNet transfer learning is already
-established practice: an ImageNet-pretrained ResNet-50 reached 96.12\%
-in 47 epochs \citep{ref11}; InceptionResNetV2/DenseNet121 transfer
-learning reached 96.99\% \citep{ref12}; and the TrOCR-style system's
-ImageNet-pretrained ViT encoder \citep{ref21} demonstrates the same
-principle for a transformer backbone. Data-efficient training
-strategies such as DeiT \citep{ref41} offer a further hedge against
-Bengali's data scarcity. A recurring caveat, however, is that
-transfer-learned models can become biased toward source-domain
-features, potentially limiting robustness for Bengali-specific script
-characteristics \citep{ref17}, one motivation for testing extended or hybrid ViT designs rather than off-the-shelf fine-tuning alone.
+ImageNet transfer learning is already common practice in Bengali HCR. An ImageNet-pretrained ResNet-50 reached 96.12\% in 47 epochs \citep{ref11}, and transfer learning with InceptionResNetV2 and DenseNet121 reached 96.99\% \citep{ref12}. The TrOCR-style system's ImageNet-pretrained ViT encoder \citep{ref21} applies the same idea to a transformer backbone. Data-efficient training strategies such as DeiT \citep{ref41} could help further with Bengali's data scarcity. One caveat recurs: transfer-learned models can become biased toward source-domain features, which may limit robustness to Bengali-specific script characteristics \citep{ref17}. That caveat is one reason this study tests extended and hybrid ViT designs instead of relying on off-the-shelf fine-tuning alone.
 
 \hypertarget{cross-dataset-evaluation-and-domain-generalisation}{%
 \subsection{Cross-Dataset Evaluation and Domain
 Generalisation}\label{cross-dataset-evaluation-and-domain-generalisation}}
 
-A recurring feature of the Bengali HCR literature is that models are
-trained and evaluated \emph{within} a single corpus, with the
-train/test split drawn from the same collection. Reported accuracies
-therefore describe within-corpus competence. Several studies do report
-results across multiple benchmarks: BanglaNet \citep{ref35} across
-CMATERdb, BanglaLekha-Isolated and Ekush; CompoundDenseNet \citep{ref23}
-across the same three, at 96.2--98.5\%; and Borno \citep{ref15} trained on
-roughly one million images spanning several datasets. In each
-case, though, the model is trained and tested on each corpus separately. This is
-multi-benchmark \emph{reporting}, not a test of transfer: it establishes
-that an architecture works on several datasets when trained on each, not
-that a model trained on one generalises to another.
+Most Bengali HCR studies train and evaluate \emph{within} a single corpus, drawing the train/test split from the same collection, so the reported accuracies describe within-corpus competence. Some studies do report results on several benchmarks: BanglaNet \citep{ref35} on CMATERdb, BanglaLekha-Isolated and Ekush; CompoundDenseNet \citep{ref23} on the same three, at 96.2--98.5\%; and Borno \citep{ref15}, trained on roughly one million images drawn from several datasets. In each case the model is trained and tested on each corpus separately. That is multi-benchmark \emph{reporting}. It shows an architecture works on several datasets when trained on each, and says nothing about whether a model trained on one generalises to another.
 
 Genuine held-out-corpus evaluation is rare. The clearest instance in the
 reviewed literature is Raquib et al.~\citeyearpar{ref25}, who train on their own
@@ -273,39 +223,15 @@ three corpora merged here: RAS-Compound stores high-resolution binarised
 white-on-black glyphs, Ekush is natively 28×28, and MatriVasha is
 black-on-white.
 
-The gap this identifies is therefore methodological rather than
-architectural. If within-corpus accuracy is the field's only reported
-metric, and if that metric substantially overstates performance on newly
-collected handwriting, then a decade of reported improvements may partly
-reflect increasingly effective fitting of corpus-specific signatures.
-Establishing whether this is so requires held-out-corpus evaluation as a
-standard protocol, which, to the authors' knowledge, has not been
-systematically applied to Bengali compound characters. That is the gap
-Section 4.6 addresses.
+This gap is methodological. If within-corpus accuracy is the only metric the field reports, and it substantially overstates performance on newly collected handwriting, then a decade of reported improvements may partly reflect better fitting of corpus-specific signatures. Testing that requires held-out-corpus evaluation as a standard protocol. To the authors' knowledge it has not been applied systematically to Bengali compound characters, and Section 4.6 addresses it.
 
-Two points from the sections above bear directly on the design that
-follows and are worth restating here. Dosovitskiy et al.~\citeyearpar{ref22} show
-that ViT trails a comparably sized ResNet when trained on ImageNet-1k
-alone, becomes comparable with ImageNet-21k pretraining, and only
-surpasses it at JFT-300M scale: large-scale pretraining trumps
-inductive bias. For a low-resource script, the corollary is that a pure
-ViT is the \emph{least} favourable architecture unless a strong prior is
-supplied externally. The hybrid designs that do exist for Bengali,
-ResViT \citep{ref19} and the EfficientNetB3--ViT--Conformer of Raquib et
-al.~\citeyearpar{ref25}, combine CNN and transformer branches \emph{in parallel}
-and fuse their outputs. ExtendedViT instead composes them
-\emph{serially}, using convolution to produce the token sequence that
-attention then operates over, which is the hybrid variant described in
-the original ViT paper's appendix but not previously evaluated on this
-script.
+Two points from the sections above shape the design that follows. First, Dosovitskiy et al.~\citeyearpar{ref22} show that ViT trails a comparably sized ResNet when trained on ImageNet-1k alone, becomes comparable with ImageNet-21k pretraining, and surpasses it only at JFT-300M scale. Large-scale pretraining outweighs inductive bias, so for a low-resource script a pure ViT is the \emph{least} favourable architecture unless a strong prior is supplied externally. Second, the hybrids that exist for Bengali, ResViT \citep{ref19} and the EfficientNetB3--ViT--Conformer of Raquib et al.~\citeyearpar{ref25}, run CNN and transformer branches \emph{in parallel} and fuse their outputs. ExtendedViT composes them \emph{serially}: convolution produces the token sequence that attention then operates over. The original ViT paper's appendix describes this variant, but it has not been evaluated on Bengali script.
 
 \hypertarget{summary-of-benchmark-datasets}{%
 \subsection{Summary of Benchmark
 Datasets}\label{summary-of-benchmark-datasets}}
 
-Table 1 summarises the principal benchmark datasets used across the
-reviewed literature, highlighting their scale, class composition, and
-relevance to compound-character recognition.
+Table 1 lists the principal benchmark datasets used in the reviewed literature, with their scale, class composition, and relevance to compound-character recognition.
 
 \begin{table*}[htbp]
 \centering
@@ -603,7 +529,7 @@ Matri\-Vasha & 306,461 & 115 & 52 & 2,665 \\
 \end{table*}
 
 
-Class inventories overlap only partially: 37 classes are shared between
+Table 3 gives the composition of each source. Class inventories overlap only partially: 37 classes are shared between
 RAS-Compound and Ekush, 58 between RAS-Compound and MatriVasha, 8
 between Ekush and MatriVasha, and just 3 appear in all three. 159 of the
 256 classes are contributed by exactly one source. The merge is
@@ -801,7 +727,7 @@ head-line; convolution captures the constituents, and self-attention
 over the full glyph captures the relationship.
 
 Figure 5 shows the data flow with tensor shapes annotated at
-each stage.
+each stage, and Table 4 lists the shapes and parameter counts layer by layer.
 
 \begin{figure}
 \centering
@@ -820,12 +746,12 @@ Stage & Output shape & Params \\
 \midrule
 Input & 3 × 224 × 224 & --- \\
 ResNet18 conv1 + bn1 + maxpool & 64 × 56 × 56 & 9,536 \\
-ResNet18 layer1--layer4 & 512 × 7 × 7 & 11,166,912 \\
+ResNet18 layer1--layer4 & 512 × 7 × 7 & 11,166,976 \\
 Flatten \ensuremath{\rightarrow} tokens & 49 × 512 & --- \\
 CLS token + positional embedding & 50 × 512 & 26,112 \\
-Transformer encoder × 4 & 50 × 512 & 12,608,000 \\
+Transformer encoder × 4 & 50 × 512 & 12,609,536 \\
 LayerNorm + linear head & 256 & 132,352 \\
-\textbf{Total} & & \textbf{23,942,912} \\
+\textbf{Total} & & \textbf{23,944,512} \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -907,8 +833,8 @@ source corpora as well as in size. Second, and more seriously, both pretrained m
 weights (ResNet18 from an earlier RAS-only checkpoint, ExtendedViT
 from the full-corpus ResNet18), so at a restricted budget each had
 seen data the comparison nominally withheld. Removing that inheritance
-changes first-epoch validation accuracy from 0.703 to 0.234, so its
-effect is large.
+lowers ExtendedViT's first-epoch validation accuracy from 0.953 to 0.867,
+so its effect is large.
 
 A third experiment is therefore designed specifically to measure data efficiency. Training is restricted to \emph{Ekush alone} (122
 classes, one image convention, per-class counts near-uniform at
@@ -1060,7 +986,7 @@ at 0.9662, ahead of ExtendedViT's 0.9576. That pure ViT leads here is
 consistent with Parvez et al.~\citeyearpar{ref17}, who found ViT superior to VGG-16
 and ResNet-50 on Bengali basic characters; this study reproduces that ordering on
 compound characters and a 256-class label space. It comes at 3.6× the
-parameters and 3.3× the inference cost (Section 4.7).
+parameters and 3.4× the inference cost (Section 4.7).
 
 Figure 6 summarises Tables 5 and 6, with the warm-started run
 shown hatched and marked excluded.
@@ -1142,7 +1068,7 @@ supported}.
 Advantage}\label{calibration-and-why-it-is-not-an-architectural-advantage}}
 
 The same runs separate decisively on the quality of their probability
-estimates.
+estimates (Table 8).
 
 \begin{table*}[htbp]
 \centering
@@ -1162,8 +1088,8 @@ Images/class & ResNet18 & Extended\-Vi\-T & Ratio & t \\
 \end{table*}
 
 
-ExtendedViT approximately halves ResNet18's calibration error at every
-budget. The separation is large relative to seed variance (t
+ExtendedViT roughly halves ResNet18's calibration error at 50, 100 and 300
+images per class, and cuts it by about a third at 1,000. The separation is large relative to seed variance (t
 \textgreater{} 17 at both replicated budgets, with non-overlapping
 ranges), and the ratio narrows monotonically as data grows (2.31×,
 2.13×, 1.91×, 1.41×), the shape expected of an effect that compensates
@@ -1187,7 +1113,7 @@ required to obtain them.
 The architecture is not required to obtain them. Temperature scaling \citep{ref48} is the standard
 post-hoc calibration correction: divide the logits by a single scalar
 fitted by minimising validation NLL, leaving accuracy exactly unchanged.
-Applying it to both models dissolves the gap.
+Applying it to both models dissolves the gap (Table 9).
 
 \begin{table*}[htbp]
 \centering
@@ -1200,9 +1126,9 @@ Budget & Model & T & ECE raw & ECE scaled & NLL raw & NLL scaled \\
 50/class & ResNet18 & 0.552 & 0.2496 & \textbf{0.0250} & 0.7174 &
 0.4697 \\
 50/class & Extended\-Vi\-T & 0.749 & 0.1171 & 0.0341 & 0.4985 & 0.4225 \\
-100/class & ResNet18 & 0.628 & 0.1773 & \textbf{0.0232} & 0.4870 &
+100/class & ResNet18 & 0.628 & 0.1773 & 0.0232 & 0.4870 &
 0.3338 \\
-100/class & Extended\-Vi\-T & 0.787 & 0.0818 & 0.0152 & 0.3887 & 0.3285 \\
+100/class & Extended\-Vi\-T & 0.787 & 0.0818 & \textbf{0.0152} & 0.3887 & 0.3285 \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -1288,10 +1214,10 @@ Extended\-Vi\-T & RAS \ensuremath{\rightarrow} Ekush & 37 & 1.0000 & 0.0205 & 0.
 \end{table*}
 
 
-\textbf{Result.} Generalisation across corpora collapses to chance. Every model
+\textbf{Result.} Generalisation across corpora collapses to chance (Table 10). Every model
 scores 0.96--1.00 on its own corpus's held-out split and 0.021--0.055 on
 another corpus's images of \emph{the same characters}, between 0.8×
-and 2.0× the chance rate of a 37- or 58-way classifier. The result holds
+and 2.2× the chance rate of a 37- or 58-way classifier. The result holds
 in both directions, for both architectures, and across both corpus
 pairs. Figure 9 plots it.
 
@@ -1312,9 +1238,8 @@ reconciliation of Section 3.2 is sound and the collapse reflects genuine
 domain shift.
 
 \textbf{Interpretation.} A model trained on a single Bengali corpus
-does not learn to recognise Bengali compound characters; it learns to
-recognise one project's rendering of them: its resolution, its
-binarisation, its ink polarity, its writer population. The 97.6\%
+learns that corpus's rendering of compound characters: its resolution,
+binarisation, ink polarity, and writer population. The 97.6\%
 achieved by the merged model across all three corpora is attainable only
 because it saw all three in training. It is not evidence of a general
 character recogniser, and neither, by extension, are the near-ceiling
@@ -1342,10 +1267,10 @@ explanation for an effect of this magnitude.
 \hypertarget{inference-cost}{%
 \subsection{Inference Cost}\label{inference-cost}}
 
-Figure 10 plots accuracy against single-image CPU latency, measured on one thread of the Apple M4 CPU. ExtendedViT runs in 17 ms against ViT-B/16's 56
-ms, 3.3× faster with 3.6× fewer parameters, because attention
-operates over 50 tokens rather than 197. Relative to ResNet18's 13 ms,
-the transformer encoder adds approximately 4 ms per image without an accuracy gain, and its raw calibration advantage is available to ResNet18 through temperature scaling at negligible cost (Section 4.5). For the resource-constrained deployment scenarios the literature emphasises \citep{ref18,ref20}, ResNet18 is therefore the more economical choice; ExtendedViT's case rests only on being 3.3× cheaper than ViT-B/16 for roughly one accuracy point less at the equal budget.
+Figure 10 plots accuracy against single-image CPU latency, measured on one thread of the Apple M4 CPU. ExtendedViT runs in 13 ms against ViT-B/16's 45
+ms, 3.4× faster with 3.6× fewer parameters, because attention
+operates over 50 tokens rather than 197. Relative to ResNet18's 11 ms,
+the transformer encoder adds approximately 2.6 ms per image without an accuracy gain, and its raw calibration advantage is available to ResNet18 through temperature scaling at negligible cost (Section 4.5). For the resource-constrained deployment scenarios the literature emphasises \citep{ref18,ref20}, ResNet18 is therefore the more economical choice; ExtendedViT's case rests only on being 3.4× cheaper than ViT-B/16 for roughly one accuracy point less at the equal budget.
 
 \begin{figure}
 \centering
@@ -1383,9 +1308,8 @@ full-corpus ResNet18 checkpoint costs 1.43 accuracy points at the
 equal-budget setting (0.9719 \ensuremath{\rightarrow} 0.9576). The inherited trunk had seen the
 entire corpus, so that 1.43-point difference measures leaked information
 rather than architecture. The equivalent inheritance in ResNet18,
-from a RAS-only checkpoint, raises first-epoch validation accuracy
-from 0.234 to 0.703 in the single-source sweep, and leaves Table 6's
-ResNet18 row similarly contaminated (Section 4.3). Sections 4.4 and 4.5
+from a RAS-only checkpoint, leaves Table 6's ResNet18 row similarly
+contaminated (Section 4.3). Sections 4.4 and 4.5
 use ImageNet initialisation throughout for both architectures.
 
 \textbf{Temperature scaling.} As reported in Section 4.5, a single
@@ -1444,7 +1368,7 @@ Raquib et al.~\citeyearpar{ref25} & Efficient\-Net\-B\-3 + ViT + Conformer & Own
 \end{table*}
 
 
-\textbf{Comparability.} These numbers are not a leaderboard and must not be presented as one. Class counts range from 50 to 256, evaluation protocols and splits
+\textbf{Comparability.} Table 11 sets the result against prior work. These numbers are not a leaderboard and must not be presented as one. Class counts range from 50 to 256, evaluation protocols and splits
 differ, several sets are near-balanced while the corpus used here is deliberately not,
 and some reported figures are averages over balanced subsets. A 98.26\%
 on 50 basic characters \citep{ref17} is a substantially easier problem than
@@ -1481,9 +1405,9 @@ should be read as evidence about rare conjuncts. This paper reports macro-F1 as 
 descriptive statistic only.
 
 \textbf{Confusions.} Errors concentrate on minimally different conjunct pairs. Only
-7 of 256 classes fall below F1 0.90. The most-confused pairs are
+7 of 256 classes fall below F1 0.90 for ExtendedViT (6 for ResNet18). The most-confused pairs are
 near-identical, and both architectures fail on essentially the same
-ones:
+ones (Table 12):
 
 \begin{table*}[htbp]
 \centering
@@ -1502,7 +1426,7 @@ True \ensuremath{\rightarrow} Predicted & Extended\-Vi\-T & ResNet18 & What diff
 \bn{ন্ঢ} \ensuremath{\rightarrow} \bn{ন্ট} & 15 & 16 & \bn{ঢ} vs \bn{ট} \\
 \bn{শ্ন} \ensuremath{\rightarrow} \bn{শ্ম} & 12 & 13 & \bn{ন} vs \bn{ম} as second component \\
 \bn{ন্ব} \ensuremath{\rightarrow} \bn{ণ্ব} & 12 & 12 & dental \bn{ন} vs retroflex \bn{ণ} \\
-\bn{ত্থ} \ensuremath{\rightarrow} \bn{থ} & 12 & --- & conjunct vs its own second component \\
+\bn{ত্থ} \ensuremath{\rightarrow} \bn{থ} & 12 & 11 & conjunct vs its own second component \\
 \bn{২} \ensuremath{\rightarrow} \bn{হ} & 13 & 13 & digit against a consonant \\
 \bottomrule
 \end{tabular}
@@ -1514,7 +1438,7 @@ nasal contrast} (\bn{ন} vs \bn{ণ}) accounts for the single largest error sou
 and it is symmetric: the confusion runs in both directions,
 indicating genuine visual ambiguity rather than a class prior. The
 worst-performing classes overall are exactly this pair, \bn{ন্ড্র} (F1
-0.8652) and \bn{ণ্ড্র} (F1 0.8814), the two halves of the same confusion.
+0.8652 for ExtendedViT) and \bn{ণ্ড্র} (F1 0.8781), the two halves of the same confusion.
 Second,
 \emph{\bn{ন} vs \bn{ম} as a second component} recurs across otherwise unrelated
 conjuncts. Third, conjuncts are confused with \emph{their own
@@ -1532,27 +1456,26 @@ supplementary material.
 
 
 \hypertarget{discussion}{%
-\subsection{Discussion}\label{discussion}}
+\section{Discussion}\label{discussion}}
 
-\textbf{Corpus versus architecture.} The dominant effect is the corpus, not the architecture.
-Section 4.6 puts the architecture comparison in proportion. Every
+\textbf{Corpus versus architecture.} The corpus matters far more than the architecture.
+Section 4.6 sets the scale for the architecture comparison. Every
 difference between architectures reported in this paper is at most a few
 accuracy points; the difference between evaluating within a corpus and
 across corpora is ninety. Any conclusion about which architecture is
 best for Bengali compound characters is therefore conditional on a fixed
 collection convention, and would need re-establishing on data collected
-differently. This paper states this before discussing the architecture results,
-because it bounds how much weight they can carry.
+differently. This comes before the architecture results because it limits
+how much weight they can carry.
 
 \textbf{Accuracy.} This study set out expecting the hybrid to be more accurate than a convolutional baseline
 when data is limited. That expectation was not met. Across a controlled sweep with the sole
 variable being per-class budget, and with three seeds at the two
 smallest budgets, no accuracy difference reaches significance; at the
-two largest budgets ResNet18 is fractionally ahead. This is reported
-because the alternative, presenting the single-seed +2.46 points at
-50 images per class, or the 1.75-point margin from the contaminated
-warm-started run, would have been a finding that repetition and a
-proper control both dissolve.
+two largest budgets ResNet18 is fractionally ahead. The alternative,
+presenting the single-seed +2.46 points at 50 images per class or the
+1.75-point margin from the contaminated warm-started run, would have
+reported a finding that disappears under repetition and a proper control.
 
 \textbf{Calibration.} The encoder yields better-calibrated raw probabilities: roughly half ResNet18's expected calibration error at every budget, largest when data is scarcest and narrowing monotonically as data grows, with a separation an order of magnitude larger than seed variance. That difference is not architectural. A single temperature fitted on validation data removes it (Section 4.5), and a temperature-scaled ResNet18 is better calibrated than an unscaled ExtendedViT. The two architectures sit at different distances from calibration under the shared training recipe; attention does not confer better-calibrated posteriors that post-hoc scaling cannot supply.
 
@@ -1561,15 +1484,15 @@ Why the raw gap arises is not established here. Both models are under-confident 
 \textbf{Relevance of calibration.} Isolated-character accuracy is
 rarely the end goal. In word- and line-level recognition the character
 posterior feeds a decoder (beam search, a language model, or a
-lexicon-constrained search) which consumes probabilities rather than argmax labels. For Bengali, where conjuncts are mutually confusable and a decoder must arbitrate between close alternatives, the shape of the posterior is arguably more consequential than its mode. The results here imply that this requirement is met more cheaply by post-hoc temperature scaling than by architectural choice: a scaled ResNet18 supplies a posterior at least as well calibrated as the hybrid's, at lower latency.
+lexicon-constrained search) which consumes probabilities rather than argmax labels. For Bengali, where conjuncts are mutually confusable and a decoder must arbitrate between close alternatives, the shape of the posterior is arguably more consequential than its mode. The results here imply that this requirement is met more cheaply by post-hoc temperature scaling than by architectural choice: a scaled ResNet18 supplies a posterior comparably calibrated to the hybrid's, at lower latency.
 
 \textbf{Relation to prior work.} That ViT-B/16 leads the properly
 initialised equal-budget comparison (Table 6) reproduces, on compound
 characters and a 256-class label space, the ordering Parvez et
-al.~\citeyearpar{ref17} reported for basic characters. This paper's contribution relative to
-that finding is not to overturn it but to quantify its cost: ViT-B/16
+al.~\citeyearpar{ref17} reported for basic characters. This paper quantifies the cost of
+that finding: ViT-B/16
 buys roughly one accuracy point over ExtendedViT at 3.6× the parameters
-and 3.3× the inference time. Numbers are not directly comparable across
+and 3.4× the inference time. Numbers are not directly comparable across
 studies given differing class counts and protocols, but for orientation
 ResViT reports 97.21\% on BanglaLekha-Isolated \citep{ref19} and
 CompoundDenseNet 96.2--98.5\% across three benchmarks \citep{ref23}, both on
@@ -1580,7 +1503,7 @@ smaller class inventories than the 256 used here.
 \emph{Initialisation contamination.} Both pretrained models initially inherited previously trained Bengali weights (ResNet18 from a
 RAS-only checkpoint, ExtendedViT from the full-corpus ResNet18), which
 invalidated the first equal-budget comparison. Removing that inheritance
-moves first-epoch validation accuracy from 0.703 to 0.234. Every number
+lowers ExtendedViT's first-epoch validation accuracy from 0.953 to 0.867. Every number
 in Sections 4.4 and 4.5 comes from runs initialised from ImageNet alone.
 Tables 5 and 6 retain the inherited initialisations for ResNet18 and are
 annotated accordingly; they should be read as upper bounds on that
@@ -1624,23 +1547,20 @@ This study unified three Bengali handwriting corpora into a 256-class,
 Unicode-normalised graphemes, and used it to evaluate four architectures
 under an identical protocol.
 
-The benchmark's principal finding is negative and, this paper argues,
-consequential for the field: trained on one constituent corpus and
+The benchmark's main finding is negative: trained on one constituent corpus and
 tested on another, every architecture falls from 0.96--1.00 same-corpus
 accuracy to 0.02--0.05 cross-corpus, verified as domain shift rather
 than label disagreement (Section 4.6). A model trained on one Bengali
-corpus therefore does not learn to recognise Bengali compound
-characters; it learns to recognise that project's rendering of them,
-and single-corpus accuracies, including the near-ceiling figures widely
+corpus therefore learns only that corpus's rendering of compound
+characters, and single-corpus accuracies, including the near-ceiling figures widely
 reported in this literature, should not be read as evidence of
-generalisation. Merging corpora is best understood as covering domains,
-not enlarging a training set.
+generalisation. Merging corpora adds domain coverage.
 
 Against that backdrop, architecture differences are small. The three pretrained architectures, spanning 11.3M to 86.3M parameters, differ by less than two accuracy points once initialisation is controlled, and only the from-scratch CNN falls far behind. The hybrid's
 apparent calibration advantage is fully correctable by temperature
 scaling, a property of the training recipe rather than the
 architecture. ViT-B/16 is the most accurate model at an equal budget, at
-3.6× the parameters and 3.3× the inference cost of the hybrid.
+3.6× the parameters and 3.4× the inference cost of the hybrid.
 
 Three methodological cautions follow, each discovered by attempting to
 falsify a claim made in this paper: warm-starting from a previously
@@ -1648,14 +1568,13 @@ trained checkpoint, routine in this literature, inflated the
 equal-budget result by 1.43 accuracy points; macro-F1 does not measure
 long-tail performance on this corpus, since rarity is confounded with
 source image quality; and architecture-level calibration comparisons
-should always be reported temperature-scaled. Transfer learning,
-meanwhile, is what makes the minority corpus's 27 otherwise-unavailable
-classes learnable at all: without pretraining, a scratch CNN reaches
+should always be reported temperature-scaled. Transfer learning also makes the minority corpus's 27
+otherwise-unavailable classes learnable: without pretraining, a scratch CNN reaches
 0.0129 accuracy on that corpus against 0.707 on the largest.
 
 Future work follows directly from the cross-corpus result. The field
 needs domain-invariant representations for handwritten Bengali, since
-the preprocessing used here plainly does not achieve them, and
+the preprocessing used here does not achieve them, and
 held-out-corpus evaluation should become standard practice alongside
 within-corpus splits. On the architecture side, these results suggest
 the returns from further model design on isolated Bengali compound
@@ -1710,7 +1629,7 @@ Inference measurement & Apple M4 CPU, single image, one thread \\
 \end{table*}
 
 
-Figure 12 lists the commands that reproduce every result.
+Table 13 gives the complete training configuration, and Figure 12 lists the commands that reproduce every result.
 
 \begin{figure*}[htbp]
 \centering
@@ -1737,6 +1656,14 @@ below.
 \hypertarget{declarations}{%
 \section{Declarations}\label{declarations}}
 
+\textbf{Funding.} The authors received no funding for this work.
+
+\textbf{Competing interests.} The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+\textbf{Author contributions.} All authors contributed to software development, data curation and processing, model training and evaluation, validation (including cross-checking of reported numbers and references), and writing of the original draft.
+
+\textbf{Ethics.} This study uses only previously published, publicly available datasets and involved no new data collection from human participants.
+
 \textbf{Data availability.} The three source corpora are pre-existing
 public datasets. Ekush \citep{ref29}, MatriVasha \citep{ref49}, and
 RAS-Compound \citep{ref50} are each described in peer-reviewed
@@ -1755,11 +1682,13 @@ without which this benchmark would not have been possible.
 \textbf{Use of AI tools.} Generative AI (Claude, Anthropic) was used
 during manuscript preparation to cross-check reported statistics against
 the underlying experiment logs and result files, to merge and renumber
-the literature review into the main text, and to copy-edit prose for
-clarity and register. It was not used to design experiments, run models,
-or generate results; all reported numbers were verified against the
-authors' own logged output before inclusion, and all scientific claims
-and conclusions are the authors' own.
+the literature review into the main text, to adapt the manuscript to the
+journal template, and to copy-edit and reword prose for clarity and
+register, including a pass to reduce repetitive phrasing. It was not used
+to design experiments, run models, or generate results. The authors
+reviewed and edited all AI-assisted text, verified all reported numbers
+and citations against their own logged output and sources, and take full
+responsibility for the content of the manuscript.
 
 
 \appendix
@@ -1806,7 +1735,7 @@ count.
 Classes range from a single code point (e.g.~\bn{ঁ}, U+0981 BENGALI SIGN
 CANDRABINDU) to five (\bn{ত} + \bn{্} + \bn{র} + \bn{্} + \bn{য}-type conjuncts), reflecting that
 a conjunct is encoded as a consonant sequence joined by U+09CD BENGALI
-SIGN VIRAMA rather than as an atomic code point. This is precisely why
+SIGN VIRAMA rather than as an atomic code point. This is why
 label reconciliation must operate on NFC-normalised grapheme strings
 rather than on folder indices (Section 3.2). Of the 256 classes, 97 are
 attested in more than one corpus and 159 in exactly one.
@@ -1824,7 +1753,7 @@ complete ranked confusion lists are released as
 \texttt{confusions\_resnet18.csv}.
 
 Summary: 27 classes at F1 = 1.000 (ExtendedViT) and 25 (ResNet18); 7 and
-6 classes respectively below F1 0.90; worst classes \bn{ন্ড্র} (0.8652) and \bn{ণ্ড্র}
-(0.8814), the two halves of the same dental/retroflex confusion
+6 classes respectively below F1 0.90; worst classes (ExtendedViT) \bn{ন্ড্র} (0.8652) and \bn{ণ্ড্র}
+(0.8781), the two halves of the same dental/retroflex confusion
 discussed in Section 4.11.
 

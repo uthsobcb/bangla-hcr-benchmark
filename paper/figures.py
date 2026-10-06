@@ -539,12 +539,15 @@ def fig9_efficiency():
         params = sum(p.numel() for p in model.parameters())
         x = torch.randn(1, 3, 224, 224)
         with torch.no_grad():
-            for _ in range(3):
+            for _ in range(20):
                 model(x)
-            t0 = time.perf_counter()
-            for _ in range(15):
+            runs = []
+            for _ in range(200):
+                t0 = time.perf_counter()
                 model(x)
-        ms = (time.perf_counter() - t0) / 15 * 1000
+                runs.append((time.perf_counter() - t0) * 1000)
+        ms = sorted(runs)[len(runs) // 2]  # median: a 15-run mean moved 13-17 ms between invocations
+        print(f"latency {key}: median {ms:.1f} ms (p10 {sorted(runs)[20]:.1f}, p90 {sorted(runs)[180]:.1f})")
 
         # sqrt scaling: a linear area map spans 1,400x across these models and is unreadable
         ax.scatter(ms, acc[key], s=(params ** 0.5) / 25, color=color, alpha=.5,
