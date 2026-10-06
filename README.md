@@ -84,7 +84,7 @@ Loads any of the four architectures from the checkpoint's `arch` field. Always C
 
 ## Paper
 
-The manuscript is `paper/main.tex` + `paper/body.tex` (Elsevier `elsarticle`, build with LuaLaTeX + BibTeX). Figures and notebooks regenerate from the saved
+Two manuscript variants share `paper/body.tex`, `paper/references.bib` and the figures in `paper/`: `paper/ivc/` (Elsevier `elsarticle`, Image and Vision Computing) and `paper/ijdar/` (Springer Nature `sn-jnl`, IJDAR). Build either with `lualatex` + `bibtex` from its folder. Figures and notebooks regenerate from the saved
 checkpoints and logs:
 
 ```bash
