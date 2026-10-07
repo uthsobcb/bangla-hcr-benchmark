@@ -948,8 +948,7 @@ Backbone init
 \end{minipage} \\
 \midrule
 Scratch CNN & 0.06M & 0.2115 & 0.7885 & 0.1934 & random \\
-ResNet18 (ImageNet) & 11.31M & 0.9544 & 0.0456 & 0.9577 & RAS-only
-checkpoint \\
+ResNet18 (ImageNet) & 11.31M & 0.9529 & 0.0471 & 0.9563 & ImageNet \\
 Extended\-Vi\-T & 23.94M & 0.9576 & 0.0424 & 0.9609 & ImageNet \\
 \textbf{ViT-B/16 (ImageNet)} & 86.33M & \textbf{0.9662} &
 \textbf{0.0338} & \textbf{0.9689} & ImageNet \\
@@ -966,23 +965,20 @@ entire corpus, so it had access to data this setting withholds. Its
 0.9719 is not a valid equal-budget result, and the 1.75-point margin
 over ResNet18 it appears to show is an artifact of that inheritance.
 
-Only two rows in this table are cleanly initialised from ImageNet alone:
-ExtendedViT (0.9576) and ViT-B/16 (0.9662). ResNet18's 0.9544 carries
-the same contamination as the excluded warm-started row: it, too, was
-initialised from a previously trained Bengali checkpoint (Section 4.1),
-and should be read as an upper bound on ResNet18's equal-budget
-accuracy, not a controlled measurement. The direction of that bound is
-worth stating plainly: even with an inherited head start, ResNet18's
-0.9544 still trails ExtendedViT's ImageNet-initialised 0.9576. A clean,
-ImageNet-only ResNet18 run would be expected to score no higher than
-0.9544, and plausibly lower, which means the true gap between ResNet18
-and ExtendedViT at this budget is at least as large as the raw numbers
-suggest, not smaller. The compute budget remaining did not allow
-rerunning ResNet18 from ImageNet initialisation at this setting before
-submission; this is flagged as the one open number in this table.
+All rows except the last are initialised from ImageNet alone: ResNet18
+(0.9529), ExtendedViT (0.9576), and ViT-B/16 (0.9662). ResNet18 was first
+run from a RAS-only Bengali checkpoint, which gave 0.9544. Rerunning it
+from ImageNet alone lowered it by 0.15 points, so that inheritance mattered
+little for ResNet18, against the 1.43 points it was worth to ExtendedViT.
+The clean gaps are 0.47 points between ExtendedViT and ResNet18 and 1.33
+points between ViT-B/16 and ResNet18. Each is a single run scored on 7,035
+test images, where one accuracy value has a standard error of about 0.25
+points, so the 0.47-point gap is within what one run can produce. The
+Ekush-only sweep (Section 4.4), which does repeat runs, finds no
+significant difference between ExtendedViT and ResNet18.
 
-Among the two properly initialised architectures, ViT-B/16 is strongest
-at 0.9662, ahead of ExtendedViT's 0.9576. That pure ViT leads here is
+Among the three ImageNet-initialised architectures, ViT-B/16 is strongest
+at 0.9662, ahead of ExtendedViT's 0.9576 and ResNet18's 0.9529. That pure ViT leads here is
 consistent with Parvez et al.~\citeyearpar{ref17}, who found ViT superior to VGG-16
 and ResNet-50 on Bengali basic characters; this study reproduces that ordering on
 compound characters and a 256-class label space. It comes at 3.6× the
@@ -1004,21 +1000,21 @@ The scratch CNN's 0.2115 against its 0.6786 on the full corpus, a
 pretrained models, is the largest data-efficiency effect in the
 study, and it belongs to the baseline rather than to the hybrid.
 
-Figure 7 gives validation accuracy and loss per epoch; the inset resolves the three pretrained models, which are otherwise indistinguishable against the scratch CNN's trajectory. The ExtendedViT curve is the warm-started run excluded from Table 6 (final 0.972), so its lead from the first epoch reflects inherited weights rather than architecture (Section 4.9); ResNet18's curve is likewise affected by its inherited checkpoint. Only the ViT-B/16 curve is cleanly ImageNet-initialised.
+Figure 7 gives validation accuracy and loss per epoch; the inset resolves the three pretrained models, which are otherwise indistinguishable against the scratch CNN's trajectory. The ExtendedViT curve is the warm-started run excluded from Table 6 (final 0.972), so its lead from the first epoch reflects inherited weights rather than architecture (Section 4.9); The ResNet18 curve is the clean ImageNet-only rerun, as is ViT-B/16.
 
 \begin{figure}
 \centering
 \includegraphics[width=0.85\linewidth]{fig6_training_curves.png}
 \caption{Validation accuracy and loss per epoch at the
-equal-budget setting; inset resolves the three pretrained models. ExtendedViT is the warm-started run and ResNet18 carries an inherited checkpoint (Section 4.3).}
+equal-budget setting; inset resolves the three pretrained models. ExtendedViT is the warm-started run; ResNet18 and ViT-B/16 are ImageNet-initialised (Section 4.3).}
 \end{figure}
 
 \hypertarget{controlled-budget-sweep-no-accuracy-advantage}{%
 \subsection{Controlled Budget Sweep: No Accuracy
 Advantage}\label{controlled-budget-sweep-no-accuracy-advantage}}
 
-Tables 5 and 6 differ in source composition as well as size, and both
-contain contaminated initialisations, so neither isolates data volume.
+Tables 5 and 6 differ in source composition as well as size, and Table 5
+carries an inherited initialisation, so neither isolates data volume.
 The Ekush-only sweep does. Figure 8 plots the outcome; Table 7
 gives the numbers, with 50 and 100 per class averaged over three seeds
 and reported as mean ± standard deviation (standard error for the difference).
@@ -1308,8 +1304,9 @@ full-corpus ResNet18 checkpoint costs 1.43 accuracy points at the
 equal-budget setting (0.9719 \ensuremath{\rightarrow} 0.9576). The inherited trunk had seen the
 entire corpus, so that 1.43-point difference measures leaked information
 rather than architecture. The equivalent inheritance in ResNet18,
-from a RAS-only checkpoint, leaves Table 6's ResNet18 row similarly
-contaminated (Section 4.3). Sections 4.4 and 4.5
+from a RAS-only checkpoint, changed its equal-budget accuracy by only 0.15
+points (0.9544 inherited, 0.9529 from ImageNet alone; Section 4.3).
+Sections 4.4 and 4.5
 use ImageNet initialisation throughout for both architectures.
 
 \textbf{Temperature scaling.} As reported in Section 4.5, a single
@@ -1505,11 +1502,10 @@ RAS-only checkpoint, ExtendedViT from the full-corpus ResNet18), which
 invalidated the first equal-budget comparison. Removing that inheritance
 lowers ExtendedViT's first-epoch validation accuracy from 0.953 to 0.867. Every number
 in Sections 4.4 and 4.5 comes from runs initialised from ImageNet alone.
-Tables 5 and 6 retain the inherited initialisations for ResNet18 and are
-annotated accordingly; they should be read as upper bounds on that
-baseline rather than as a controlled comparison, and a clean
-ImageNet-only ResNet18 rerun at the equal-budget setting was not
-completed before submission (Section 4.3).
+Table 5 retains the inherited initialisation for ResNet18 and is
+annotated accordingly; it should be read as an upper bound for that
+baseline rather than as a controlled comparison. The equal-budget
+ResNet18 result in Table 6 was rerun from ImageNet alone (Section 4.3).
 
 \emph{Seeds and statistical power.} Three seeds establish that the
 accuracy differences are not significant and that the calibration
@@ -1674,6 +1670,8 @@ itself is released alongside the reconciliation code. The
 label-reconciliation mapping files (\texttt{ras\_class\_mapping.csv},
 \texttt{matrivasha\_mapping.csv}) and the manifest-construction code
 that reproduces the unified corpus are released with this paper.
+
+\textbf{Code availability.} The code, the label-reconciliation mapping files, the unified manifest with its fixed split, and the trained checkpoints are available at \url{https://github.com/fifth-grid/bangla-hcr-benchmark}.
 
 \textbf{Acknowledgements.} The authors thank the creators of
 RAS-Compound, Ekush, and MatriVasha for releasing their data publicly,

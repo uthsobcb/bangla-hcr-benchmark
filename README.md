@@ -140,3 +140,7 @@ The first trains on one corpus and evaluates on another over the classes they sh
 experiment behind the paper's central finding. The second fits a single temperature on
 validation logits and reports ECE before and after, which is the control that determines
 whether a calibration difference is architectural.
+
+## Licence
+
+The code, label-reconciliation mapping files, and manifest in this repository are released under the [MIT Licence](LICENSE). The three source corpora (RAS-Compound, Ekush, MatriVasha) are not redistributed here and keep their own licences; check each source's terms before use.

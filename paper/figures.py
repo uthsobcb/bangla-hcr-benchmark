@@ -255,6 +255,10 @@ def _parse_log(path):
     return [tuple(map(float, m)) for m in pat.findall(path.read_text(errors="replace"))]
 
 
+def _log_name(key):  # the reported equal-budget ResNet18 is the clean (no warm start) run
+    return "resnet18_imagenet.log" if key == "resnet18" else f"{key}.log"
+
+
 LOGS = OUT.parent / "logs"
 METHODS = [("cnn", "Scratch CNN", "#C44E52"), ("resnet18", "ResNet18", "#4C72B0"),
            ("extended_vit", "ExtendedViT", "#55A868"), ("vit", "ViT-B/16", "#8172B2")]
@@ -271,7 +275,7 @@ def fig6_training_curves():
     inset = ax1.inset_axes([0.50, 0.28, 0.47, 0.42])
     partial = []
     for key, label, color in METHODS:
-        rows = _parse_log(LOGS / f"{key}.log")
+        rows = _parse_log(LOGS / _log_name(key))
         if not rows:
             continue
         ep = [r[0] for r in rows]
@@ -332,7 +336,7 @@ def fig7_results():
             ("extended_vit", "ExtendedViT\n(warm-started)", "#999999")]
     capped = {}
     for key, _l, _c in BARS:
-        rows = _parse_log(LOGS / f"{key}.log")
+        rows = _parse_log(LOGS / _log_name(key))
         if rows:
             capped[key] = max(r[4] for r in rows)
 
@@ -376,7 +380,7 @@ def _fig7_results_old():
     FULL = {"resnet18": 0.9768, "extended_vit": 0.9756}
     capped = {}
     for key, _l, _c in METHODS:
-        rows = _parse_log(LOGS / f"{key}.log")
+        rows = _parse_log(LOGS / _log_name(key))
         if rows:
             capped[key] = max(r[4] for r in rows)
     full_cnn = _parse_log(LOGS / "cnn_full.log")
@@ -520,7 +524,7 @@ def fig9_efficiency():
 
     acc = {}
     for key, _l, _c in METHODS:
-        rows = _parse_log(LOGS / f"{key}.log")
+        rows = _parse_log(LOGS / _log_name(key))
         if rows:
             acc[key] = max(r[4] for r in rows)
     clean = _parse_log(LOGS / "extended_vit_imagenet.log")
