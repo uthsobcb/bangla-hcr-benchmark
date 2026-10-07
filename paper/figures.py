@@ -255,9 +255,13 @@ def _parse_log(path):
     return [tuple(map(float, m)) for m in pat.findall(path.read_text(errors="replace"))]
 
 
+def _log_name(key):  # the reported equal-budget ResNet18 is the clean (no warm start) run
+    return "resnet18_imagenet.log" if key == "resnet18" else f"{key}.log"
+
+
 LOGS = OUT.parent / "logs"
 METHODS = [("cnn", "Scratch CNN", "#C44E52"), ("resnet18", "ResNet18", "#4C72B0"),
-           ("extended_vit", "ExtendedViT (ours)", "#55A868"), ("vit", "ViT-B/16", "#8172B2")]
+           ("extended_vit", "ExtendedViT", "#55A868"), ("vit", "ViT-B/16", "#8172B2")]
 
 
 def fig6_training_curves():
@@ -268,13 +272,15 @@ def fig6_training_curves():
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
     # the three pretrained models sit within 2 points of each other, invisible on a 0-1 axis
-    inset = ax1.inset_axes([0.42, 0.30, 0.55, 0.42])
+    inset = ax1.inset_axes([0.50, 0.28, 0.47, 0.42])
     partial = []
     for key, label, color in METHODS:
-        rows = _parse_log(LOGS / f"{key}.log")
+        rows = _parse_log(LOGS / _log_name(key))
         if not rows:
             continue
         ep = [r[0] for r in rows]
+        if key == "extended_vit":
+            label = "ExtendedViT (warm-started)"
         ax1.plot(ep, [r[4] for r in rows], "-o", color=color, ms=3.5, lw=1.6, label=label)
         ax2.plot(ep, [r[3] for r in rows], "-o", color=color, ms=3.5, lw=1.6, label=label)
         if key != "cnn":
@@ -290,7 +296,7 @@ def fig6_training_curves():
     ax1.set_xlabel("Epoch"), ax1.set_ylabel("Validation accuracy")
     ax1.set_title("(a) Validation accuracy", fontsize=11, loc="left")
     ax1.set_ylim(0, 1.05)
-    ax1.legend(fontsize=8.5, loc="upper left", frameon=False, bbox_to_anchor=(0, .92))
+    ax1.legend(fontsize=8, loc="lower left", frameon=False, bbox_to_anchor=(0, .24))
     ax2.set_xlabel("Epoch"), ax2.set_ylabel("Validation loss")
     ax2.set_title("(b) Validation loss", fontsize=11, loc="left")
     ax2.legend(fontsize=8.5, frameon=False)
@@ -330,7 +336,7 @@ def fig7_results():
             ("extended_vit", "ExtendedViT\n(warm-started)", "#999999")]
     capped = {}
     for key, _l, _c in BARS:
-        rows = _parse_log(LOGS / f"{key}.log")
+        rows = _parse_log(LOGS / _log_name(key))
         if rows:
             capped[key] = max(r[4] for r in rows)
 
@@ -374,7 +380,7 @@ def _fig7_results_old():
     FULL = {"resnet18": 0.9768, "extended_vit": 0.9756}
     capped = {}
     for key, _l, _c in METHODS:
-        rows = _parse_log(LOGS / f"{key}.log")
+        rows = _parse_log(LOGS / _log_name(key))
         if rows:
             capped[key] = max(r[4] for r in rows)
     full_cnn = _parse_log(LOGS / "cnn_full.log")
@@ -518,9 +524,12 @@ def fig9_efficiency():
 
     acc = {}
     for key, _l, _c in METHODS:
-        rows = _parse_log(LOGS / f"{key}.log")
+        rows = _parse_log(LOGS / _log_name(key))
         if rows:
             acc[key] = max(r[4] for r in rows)
+    clean = _parse_log(LOGS / "extended_vit_imagenet.log")
+    if clean:
+        acc["extended_vit"] = max(r[4] for r in clean)
 
     fig, ax = plt.subplots(figsize=(7.6, 4.8))
     torch.set_num_threads(1)  # one thread: comparable, and typical of a constrained deployment
@@ -534,12 +543,15 @@ def fig9_efficiency():
         params = sum(p.numel() for p in model.parameters())
         x = torch.randn(1, 3, 224, 224)
         with torch.no_grad():
-            for _ in range(3):
+            for _ in range(20):
                 model(x)
-            t0 = time.perf_counter()
-            for _ in range(15):
+            runs = []
+            for _ in range(200):
+                t0 = time.perf_counter()
                 model(x)
-        ms = (time.perf_counter() - t0) / 15 * 1000
+                runs.append((time.perf_counter() - t0) * 1000)
+        ms = sorted(runs)[len(runs) // 2]  # median: a 15-run mean moved 13-17 ms between invocations
+        print(f"latency {key}: median {ms:.1f} ms (p10 {sorted(runs)[20]:.1f}, p90 {sorted(runs)[180]:.1f})")
 
         # sqrt scaling: a linear area map spans 1,400x across these models and is unreadable
         ax.scatter(ms, acc[key], s=(params ** 0.5) / 25, color=color, alpha=.5,
@@ -549,7 +561,7 @@ def fig9_efficiency():
                     ha="center", fontsize=8.5, color=color, zorder=4)
 
     ax.set_xscale("log")
-    ax.set_xlim(2.6, 130)
+    ax.set_xlim(2.0, 130)
     ax.set_ylim(0.08, 1.14)
     ax.set_xticks([5, 10, 20, 50, 100])
     ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
@@ -602,7 +614,7 @@ def fig10_data_efficiency_sweep():
     import matplotlib.pyplot as plt
     import statistics as st
 
-    ARCHS_ = [("resnet18", "ResNet18", "#4C72B0"), ("extended_vit", "ExtendedViT (ours)", "#55A868")]
+    ARCHS_ = [("resnet18", "ResNet18", "#4C72B0"), ("extended_vit", "ExtendedViT", "#55A868")]
     m = _sweep_metrics()
 
     def series(arch, key):

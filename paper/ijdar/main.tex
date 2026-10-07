@@ -1,0 +1,45 @@
+% !TeX program = lualatex
+% IJDAR (Springer Nature) submission build. Figures are shared with ../ (paper/).
+\documentclass[sn-mathphys-ay]{sn-jnl}
+
+\usepackage{fontspec}
+\setmainfont{Noto Serif}
+\newfontfamily\bengalifont{Noto Sans Bengali}[Script=Bengali,Language=Bengali]
+\newcommand{\bn}[1]{{\bengalifont #1}}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\graphicspath{{../}}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{textcomp}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\small,breaklines=true,columns=fullflexible,frame=tb,captionpos=t}
+\emergencystretch=3em
+
+\begin{document}
+
+\title[Single-Corpus Accuracy Overstates Bengali Compound-Character Recognition]{Single-Corpus Accuracy Overstates Bengali Compound-Character Recognition: A Unified 256-Class Benchmark and Cross-Corpus Evaluation}
+
+\author[1]{\fnm{Uthsob} \sur{Chakraborty}}\email{chakraborty2305341621@diu.edu.bd}
+\author[1]{\fnm{Tonmoy} \sur{Biswas}}\email{biswas2305341006@diu.edu.bd}
+\author[1]{\fnm{Md. Shihab} \sur{Uddin}}\email{uddin2305341102@diu.edu.bd}
+\author[2]{\fnm{Utshob} \sur{Bose}}\email{utshob.bose@g.bracu.ac.bd}
+\author*[1]{\fnm{Md. Fahad} \sur{Hossain}}\email{fahadhossain.swe@diu.edu.bd}
+
+\affil[1]{\orgdiv{Department of Software Engineering}, \orgname{Daffodil International University}, \city{Dhaka}, \country{Bangladesh}}
+\affil[2]{\orgname{BRAC University}, \city{Dhaka}, \country{Bangladesh}}
+
+\abstract{Bengali compound characters, formed by conjoining two or more consonants, comprise more than 170 mutually confusable glyphs, and progress is held back by fragmented, individually small corpora more than by architecture. Three public corpora (RAS-Compound, Ekush, and MatriVasha) are unified into a 256-class benchmark of 681,309 images, with labels reconciled by Unicode NFC normalisation rather than dataset-local folder indices; the resulting imbalance is an artifact of source size, not character frequency. Four architectures are benchmarked under one protocol: a from-scratch CNN, fine-tuned ResNet18 and ViT-B/16, and ExtendedViT, a hybrid that tokenises images with an ImageNet-pretrained ResNet18 for a four-layer Transformer encoder. ViT-B/16 leads at an equal data budget (0.9662); on the full corpus, ResNet18 and ExtendedViT are indistinguishable (0.9764 vs 0.9760). The most consequential result comes from cross-corpus testing. When a model is trained on one constituent corpus and tested on another, restricted to shared classes, every model falls from 0.96--1.00 same-corpus accuracy to 0.02--0.05, at or barely above chance, and a label-consistency check attributes this to domain shift rather than label disagreement. Single-corpus accuracy therefore reflects familiarity with the corpus, not character recognition. A controlled sweep from 50 to 1,000 images per class, across three seeds, finds no significant accuracy difference between ResNet18 and the hybrid, and the hybrid's raw calibration error, roughly half ResNet18's at small budgets, confers no consistent advantage once both models are temperature-scaled. Warm-starting inflated one result by 1.43 points, and macro-F1 fails to measure long-tail performance when rarity is confounded with source.}
+
+\keywords{Bengali handwritten character recognition, compound characters, cross-corpus generalisation, domain shift, benchmark, Vision Transformer, hybrid CNN--Transformer, model calibration}
+
+\maketitle
+
+\input{../body.tex}
+
+\bibliography{../references}
+
+\end{document}

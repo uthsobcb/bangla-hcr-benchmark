@@ -1,2 +1,3 @@
-method,test_acc,CER,macro_f1,params_M,ckpt_MB,cpu_ms_per_img,eval_s,acc_Ekush,acc_MatriVasha,acc_RAS
-extended_vit,0.9576,0.0424,0.9609,23.94,95.9,9.3,52.0,0.9541,0.9593,0.9906
+method,test_acc,CER,macro_f1,params_M,ckpt_MB,cpu_ms_per_img,eval_s,acc_Ekush,acc_MatriVasha,acc_RAS,NLL,ECE,mean_conf
+extended_vit,0.9576,0.0424,0.9609,23.94,95.9,9.3,52.0,0.9541,0.9593,0.9906,,,
+resnet18,0.9529,0.0471,0.9563,11.31,45.3,6.7,37.9,0.9501,0.9548,0.9718,0.2949,0.1121,0.8408

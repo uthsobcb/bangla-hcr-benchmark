@@ -84,11 +84,11 @@ Loads any of the four architectures from the checkpoint's `arch` field. Always C
 
 ## Paper
 
-`paper/draft.md` is the manuscript. Figures and notebooks regenerate from the saved
+Two manuscript variants share `paper/body.tex`, `paper/references.bib` and the figures in `paper/`: `paper/ivc/` (Elsevier `elsarticle`, Image and Vision Computing) and `paper/ijdar/` (Springer Nature `sn-jnl`, IJDAR). Build either with `lualatex` + `bibtex` from its folder. Figures and notebooks regenerate from the saved
 checkpoints and logs:
 
 ```bash
-./venv/bin/python paper/figures.py           # all 9 figures -> paper/*.png
+./venv/bin/python paper/figures.py           # all 11 figures -> paper/*.png
 ./venv/bin/python paper/make_notebooks.py    # build + execute notebooks 01-03
 ./venv/bin/python paper/make_notebooks.py 01 --no-exec   # build one, don't run it
 ```
@@ -99,9 +99,9 @@ logs and keep every output inline, which the plain scripts do not. Training itse
 
 | notebook | contents |
 |---|---|
-| `01-dataset-analysis.ipynb` | label reconciliation, per-source composition, imbalance, Figs 2/4/5 |
-| `02-training-and-results.ipynb` | full training logs, results tables, Figs 6/7/9, confusion matrices |
-| `03-attention-and-inference.ipynb` | architecture trace, CLS attention (Fig 8), CPU latency |
+| `01-dataset-analysis.ipynb` | label reconciliation, per-source composition, imbalance, fig2/fig4/fig5 files |
+| `02-training-and-results.ipynb` | full training logs, results tables, fig6/fig7/fig9 files, confusion matrices |
+| `03-attention-and-inference.ipynb` | architecture trace, CLS attention (fig8 file), CPU latency |
 
 ## Layout
 
@@ -140,3 +140,11 @@ The first trains on one corpus and evaluates on another over the classes they sh
 experiment behind the paper's central finding. The second fits a single temperature on
 validation logits and reports ECE before and after, which is the control that determines
 whether a calibration difference is architectural.
+
+## Manifest and splits
+
+`manifest.csv.gz` lists all 681,309 images with `path` (relative to the data root), `source`, `label` (NFC grapheme), `class_idx`, and one column per experiment split: `split_full`, `split_lpc300`, `split_ekush_lpc{50,100,300,1000}` and `split_cross_{ras_to_ekush,ras_to_matrivasha,ekush_to_ras,matrivasha_to_ras}`. Values are `train`, `val`, `test` (`xtest` for cross-corpus targets) or empty. Regenerate with `python export_manifest.py` (SHA-256 of the output is printed and is reproducible).
+
+## Licence
+
+The code, label-reconciliation mapping files, and manifest in this repository are released under the [MIT Licence](LICENSE). The three source corpora (RAS-Compound, Ekush, MatriVasha) are not redistributed here and keep their own licences; check each source's terms before use.

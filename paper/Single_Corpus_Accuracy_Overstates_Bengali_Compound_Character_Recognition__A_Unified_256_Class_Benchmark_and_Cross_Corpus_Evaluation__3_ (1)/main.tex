@@ -1,0 +1,81 @@
+% !TeX program = lualatex
+\documentclass[5p,10pt]{elsarticle}
+
+% ---------- fonts (LuaLaTeX) ----------
+% Loaded by system family name: both are preinstalled on Overleaf's compile
+% containers (Ubuntu 22.04 font packages), so no font files need to be
+% uploaded with the project.
+\usepackage{fontspec}
+\setmainfont{Noto Serif}
+\newfontfamily\bengalifont{Noto Sans Bengali}[Script=Bengali,Language=Bengali]
+\newcommand{\bn}[1]{{\bengalifont #1}}
+
+% ---------- standard packages ----------
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{textcomp}
+\emergencystretch=3em
+\relax
+
+% ---------- bibliography: author-year (Harvard) style ----------
+\bibliographystyle{elsarticle-harv}
+\biboptions{round,authoryear}
+
+% ---------- hyperref: clickable citations, links, DOIs ----------
+\usepackage[colorlinks=true,
+            linkcolor=blue!55!black,
+            citecolor=blue!55!black,
+            urlcolor=blue!55!black,
+            breaklinks=true]{hyperref}
+\usepackage{cleveref}
+
+\journal{Natural Language Processing Journal}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Single-Corpus Accuracy Overstates Bengali Compound-Character Recognition: A Unified 256-Class Benchmark and Cross-Corpus Evaluation}
+
+\author[inst1]{Uthsob Chakraborty}
+\ead{chakraborty2305341621@diu.edu.bd}
+\author[inst1]{Tonmoy Biswas}
+\ead{chakraborty2305341621@diu.edu.bd}
+\author[inst1]{Md. Shihab Uddin}
+\ead{chakraborty2305341621@diu.edu.bd}
+\author[inst2]{Utshob Bose}
+\ead{utshob.bose@g.bracu.ac.bd}
+\author[inst1]{Md. Fahad Hossain\corref{cor1}}
+\ead{fahadhossain.swe@diu.edu.bd}
+
+\cortext[cor1]{Corresponding author.}
+\address[inst1]{Department of Software Engineering, Daffodil International University, Dhaka, Bangladesh}
+\address[inst2]{BRAC University, Dhaka, Bangladesh}
+
+\begin{abstract}
+Bengali compound characters, formed by conjoining two or more consonants, comprise more than 170 mutually confusable glyphs, and progress on recognising them is limited less by architecture than by fragmented, individually small corpora. Three public corpora (RAS-Compound, Ekush, and MatriVasha) are unified into a 256-class benchmark of 681,309 images, with labels reconciled by Unicode NFC normalisation rather than dataset-local folder indices; the resulting imbalance is an artifact of source size, not character frequency. Four architectures are benchmarked under one protocol: a from-scratch CNN, fine-tuned ResNet18 and ViT-B/16, and ExtendedViT, a hybrid that tokenises images with an ImageNet-pretrained ResNet18 for a four-layer Transformer encoder. ViT-B/16 leads at an equal data budget (0.9662); on the full corpus, ResNet18 and ExtendedViT are indistinguishable (0.9764 vs 0.9760). The most consequential result concerns none of these architectures: trained on one constituent corpus and tested on another, restricted to shared classes, every model falls from 0.96--1.00 same-corpus accuracy to 0.02--0.05, at or barely above chance, and a label-consistency check attributes this to domain shift rather than label disagreement. Single-corpus accuracy therefore measures corpus familiarity rather than character recognition. A controlled sweep from 50 to 1,000 images per class, across three seeds, finds no significant accuracy difference between ResNet18 and the hybrid, and the hybrid's roughly halved calibration error is fully removed by temperature scaling. Warm-starting inflated one result by 1.43 points, and macro-F1 does not measure long-tail performance when rarity is confounded with source.
+\end{abstract}
+
+\begin{highlights}
+\item A 256-class, 681,309-image Bengali benchmark unifying three corpora by grapheme
+\item Models transfer across corpora at chance: 0.97 same-corpus, 0.03 cross-corpus
+\item Single-corpus accuracy measures corpus familiarity, not character recognition
+\item Pretrained models differ by under two points once initialisation is controlled
+\item Apparent calibration gaps between architectures vanish under temperature scaling
+\end{highlights}
+
+\begin{keyword}
+Bengali handwritten character recognition \sep compound characters \sep cross-corpus generalisation \sep domain shift \sep benchmark \sep Vision Transformer \sep hybrid CNN--Transformer \sep model calibration
+\end{keyword}
+
+\end{frontmatter}
+
+\input{body.tex}
+
+\bibliography{references}
+
+\end{document}

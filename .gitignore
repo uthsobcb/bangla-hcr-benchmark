@@ -9,11 +9,12 @@ data/
 checkpoints/
 logs/
 
-# build output — regenerate with paper/build.py
-paper/draft.docx
-paper/draft.pdf
-paper/draft_clean.docx
-paper/draft_clean.pdf
-paper/_*.md
-paper/_*.html
-paper/_*.css
+# LaTeX build output — rebuild with lualatex + bibtex in paper/
+paper/**/*.aux
+paper/**/*.log
+paper/**/*.out
+paper/**/*.blg
+paper/**/*.spl
+paper/**/*.bbl
+paper/**/main.pdf
+paper/overleaf_upload.zip
