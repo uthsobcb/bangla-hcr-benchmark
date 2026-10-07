@@ -141,6 +141,10 @@ experiment behind the paper's central finding. The second fits a single temperat
 validation logits and reports ECE before and after, which is the control that determines
 whether a calibration difference is architectural.
 
+## Manifest and splits
+
+`manifest.csv.gz` lists all 681,309 images with `path` (relative to the data root), `source`, `label` (NFC grapheme), `class_idx`, and one column per experiment split: `split_full`, `split_lpc300`, `split_ekush_lpc{50,100,300,1000}` and `split_cross_{ras_to_ekush,ras_to_matrivasha,ekush_to_ras,matrivasha_to_ras}`. Values are `train`, `val`, `test` (`xtest` for cross-corpus targets) or empty. Regenerate with `python export_manifest.py` (SHA-256 of the output is printed and is reproducible).
+
 ## Licence
 
 The code, label-reconciliation mapping files, and manifest in this repository are released under the [MIT Licence](LICENSE). The three source corpora (RAS-Compound, Ekush, MatriVasha) are not redistributed here and keep their own licences; check each source's terms before use.
