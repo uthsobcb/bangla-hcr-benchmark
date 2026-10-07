@@ -802,8 +802,8 @@ constraint rather than an afterthought: it is what motivates the
 alongside accuracy in Section 4.7 so that the accuracy/latency trade-off
 is explicit.
 
-\textbf{Implementation.} PyTorch 2.13 with torchvision 0.28 and timm
-1.0.28, trained on an Apple Mac mini with the M4 chip via the Metal Performance Shaders (MPS) backend. All CPU latencies are measured on the same machine.
+\textbf{Implementation.} The main experiments used PyTorch 2.13 with torchvision 0.28 and timm
+1.0.28. The clean ResNet18 rerun (Section 4.3) and the latency timings used PyTorch 2.14.1, torchvision 0.29.1 and timm 1.0.30. All models were trained on an Apple Mac mini with the M4 chip via the Metal Performance Shaders (MPS) backend. All CPU latencies are measured on the same machine.
 
 
 \hypertarget{evaluation-study}{%
@@ -1617,7 +1617,7 @@ brightness/contrast jitter 0.3 \\
 Normalisation & μ = σ = 0.5 per channel \\
 Model selection & Best validation accuracy \\
 Split & 80/10/10 stratified per class, seed 42 \\
-Framework & PyTorch 2.13, torchvision 0.28, timm 1.0.28 \\
+Framework & PyTorch 2.13, torchvision 0.28, timm 1.0.28 (ResNet18 rerun and latency: 2.14.1, 0.29.1, 1.0.30) \\
 Hardware & Apple Mac mini (M4 chip), Metal Performance Shaders backend \\
 Inference measurement & Apple M4 CPU, single image, one thread \\
 \bottomrule
