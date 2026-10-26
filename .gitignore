@@ -18,3 +18,4 @@ paper/**/*.spl
 paper/**/*.bbl
 paper/**/main.pdf
 paper/overleaf_upload.zip
+paper/overleaf_*.zip
