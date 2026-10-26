@@ -802,8 +802,8 @@ constraint rather than an afterthought: it is what motivates the
 alongside accuracy in Section 4.7 so that the accuracy/latency trade-off
 is explicit.
 
-\textbf{Implementation.} The main experiments used PyTorch 2.13 with torchvision 0.28 and timm
-1.0.28. The clean ResNet18 rerun (Section 4.3) and the latency timings used PyTorch 2.14.1, torchvision 0.29.1 and timm 1.0.30. All models were trained on an Apple Mac mini with the M4 chip via the Metal Performance Shaders (MPS) backend. All CPU latencies are measured on the same machine.
+\textbf{Implementation.} The main experiments used PyTorch \citep{paszke2019pytorch} 2.13 with torchvision 0.28 and timm
+\citep{wightman2019timm} 1.0.28. The clean ResNet18 rerun (Section 4.3) and the latency timings used PyTorch 2.14.1, torchvision 0.29.1 and timm 1.0.30. All models were trained on an Apple Mac mini with the M4 chip via the Metal Performance Shaders (MPS) backend. All CPU latencies are measured on the same machine.
 
 
 \hypertarget{evaluation-study}{%
@@ -1652,7 +1652,7 @@ below.
 \hypertarget{declarations}{%
 \section{Declarations}\label{declarations}}
 
-\textbf{Funding.} The authors received no funding for this work.
+\textbf{Funding.} This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
 
 \textbf{Competing interests.} The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
 
@@ -1671,22 +1671,11 @@ label-reconciliation mapping files (\texttt{ras\_class\_mapping.csv},
 \texttt{matrivasha\_mapping.csv}) and the manifest-construction code
 that reproduces the unified corpus are released with this paper.
 
-\textbf{Code availability.} The code, the label-reconciliation mapping files, and the unified manifest with its fixed split are available at \url{https://github.com/uthsobcb/bangla-hcr-benchmark} and archived on Zenodo (\url{https://doi.org/10.5281/zenodo.23220342}).
+\textbf{Code availability.} The code, the label-reconciliation mapping files, and the unified manifest with its fixed split are available at \url{https://github.com/uthsobcb/bangla-hcr-benchmark} and archived on Zenodo \citep{chakraborty2026bangla} (\url{https://doi.org/10.5281/zenodo.23220342}).
 
-\textbf{Acknowledgements.} The authors thank the creators of
-RAS-Compound, Ekush, and MatriVasha for releasing their data publicly,
-without which this benchmark would not have been possible.
+\section*{Declaration of generative AI and AI-assisted technologies in the manuscript preparation process}
 
-\textbf{Use of AI tools.} Generative AI (Claude, Anthropic) was used
-during manuscript preparation to cross-check reported statistics against
-the underlying experiment logs and result files, to merge and renumber
-the literature review into the main text, to adapt the manuscript to the
-journal template, and to copy-edit and reword prose for clarity and
-register, including a pass to reduce repetitive phrasing. It was not used
-to design experiments, run models, or generate results. The authors
-reviewed and edited all AI-assisted text, verified all reported numbers
-and citations against their own logged output and sources, and take full
-responsibility for the content of the manuscript.
+During the preparation of this work the authors used Claude (Anthropic) to cross-check reported statistics against the underlying experiment logs and result files, to merge and renumber the literature review into the main text, to adapt the manuscript to the journal template, and to copy-edit and reword prose for clarity and register. It was not used to design experiments, run models, or generate results. After using this tool, the authors reviewed and edited the content as needed, verified all reported numbers and citations against their own logs and sources, and take full responsibility for the content of the published article.
 
 
 \appendix

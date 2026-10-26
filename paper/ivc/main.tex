@@ -22,9 +22,10 @@
 \emergencystretch=3em
 \relax
 
-% ---------- bibliography: author-year (Harvard) style ----------
-\bibliographystyle{elsarticle-harv}
-\biboptions{round,authoryear}
+% ---------- bibliography: numbered, in order of appearance (journal style) ----------
+\bibliographystyle{elsarticle-num}
+\biboptions{numbers,sort&compress}
+\renewcommand{\citeyearpar}[1]{\citep{#1}}
 
 % ---------- hyperref: clickable citations, links, DOIs ----------
 \usepackage[colorlinks=true,
@@ -70,12 +71,16 @@ Bengali compound characters, formed by conjoining two or more consonants, compri
 \end{highlights}
 
 \begin{keyword}
-Bengali handwritten character recognition \sep compound characters \sep cross-corpus generalisation \sep domain shift \sep benchmark \sep Vision Transformer \sep hybrid CNN--Transformer \sep model calibration
+Bengali handwritten character recognition \sep compound characters \sep cross-corpus generalisation \sep domain shift \sep Vision Transformer \sep hybrid CNN--Transformer \sep model calibration
 \end{keyword}
 
 \end{frontmatter}
 
 \input{../body.tex}
+
+\section*{Acknowledgements}
+The authors thank the creators of RAS-Compound, Ekush, and MatriVasha for releasing their data publicly, without which this benchmark would not have been possible.
+
 
 \bibliography{../references}
 
