@@ -58,174 +58,31 @@ and should always be temperature scaled (Section 4.5).
 \hypertarget{literature-review}{%
 \section{Literature Review}\label{literature-review}}
 
-\hypertarget{introduction-to-bangla-handwritten-character-recognition-and-its-challenges}{%
-\subsection{Introduction to Bengali Handwritten Character Recognition
-and Its
-Challenges}\label{introduction-to-bangla-handwritten-character-recognition-and-its-challenges}}
-Of the roughly 284 million Bengali (Bangla) speakers counted in Section 1, about 242 million are native speakers and about 43 million use it as a second language \citep{ekushnetnote}. The script consists of 50 basic characters supplemented with more than 170 conjunct consonants made up of combination of two or more basic characters \citep{ref7}.
+\subsection{Background and Challenges}\label{background}
 
-Recognition of handwritten characters in the Bengali language is especially difficult due to certain challenges that are repeatedly mentioned in the reviewed literature: (i) cursive nature of the script and head-line connections; (ii) extremely high inter-class similarity when two distinct characters can differ by just one dot \citep{ref32}; (iii) significant variability in handwriting style of each individual writer; (iv) shortage of data on rare compound characters; and (v) unbalanced data distribution because of Zipfian-like frequency distribution of characters in natural Bengali text \citep{ref33}.
+Of the roughly 284 million Bengali (Bangla) speakers counted in Section 1, about 242 million are native speakers and about 43 million use it as a second language \citep{ekushnetnote}. The script has 50 basic characters and more than 170 conjunct consonants, each formed from two or more basic characters \citep{ref7}. The literature names five recurring difficulties: the cursive script with its head-line connections; very high inter-class similarity, where two characters can differ by a single dot \citep{ref32}; variability between writers; scarce data for rare compounds; and a Zipf-like character frequency that leaves classes unbalanced \citep{ref33}. Bengali therefore remains a low-resource script, and OCR systems for it lag behind those for Latin scripts \citep{ref21,ref26}.
 
-These issues make Bengali a classic case of a complex, low-resource script for which OCR/HCR systems still lag behind those developed for Latin scripts \citep{ref21,ref26}.
+\subsection{Classical and CNN Methods}\label{classical-and-cnn-methods}
 
-\hypertarget{traditional-and-classical-methodologies}{%
-\subsection{Traditional and Classical
-Methodologies}\label{traditional-and-classical-methodologies}}
+Early work used hand-designed features: gradient features with an MQDF classifier \citep{ref1}, shadow, longest-run and quad-tree features with MLP or SVM at 87.26\% \citep{ref2}, convex-hull and quad-tree features with SVM at 79.35\% on the 171 compound classes of CMATERdb 3.1.3.3 \citep{ref3}, region-sampling methods at 86.65--87.28\% \citep{ref4,ref5}, and a two-step MQDF-MLP at 95.8\% on 50 basic characters \citep{ref6}. These methods scale poorly to the full set of more than 230 characters and reach only about 79--87\% on compounds \citep{ref26}.
 
-The earliest work done in Bengali HCR has focused on manually designed
-features: gradient and direction features with MQDF classifier
-\citep{ref1}; shadow, longest run, and quad-tree features with MLP/SVM,
-giving 87.26\% accuracy on a combined set of basic, compound, and modifier
-characters \citep{ref2}; CMATERdb 3.1.3.3 dataset itself, which was proposed by
-using convex hull and quad-tree features with SVM on 171 compound character
-classes with 79.35\% accuracy \citep{ref3}; multi-objective region sampling with
-non-dominated sorting harmony search approach, giving 86.65-87.28\%
-accuracy \citep{ref4}, later extended to a multi-scale deep quad-tree approach
-over several Indic scripts \citep{ref5}; and a two-step MQDF-MLP approach giving
-95.8\% accuracy on 50 basic characters \citep{ref6}. In the context of digits,
-HOG features along with SVM has provided 98.08\%, 95.68\% and 93.32\% accuracy on CMATERdb, Ekush, and NumtaDB datasets respectively
-\citep{ref34}.
-All such classical methods are script and feature-engineering based,
-scale poorly for the complete set of over 230 characters, and perform at around 79-87\%, which is significantly inferior to deep-learning based approaches;
-and their single advantage of low data requirement does not make up for their bad accuracy performance \citep{ref26}.
+CNNs have dominated since about 2015. Reported accuracy rose from 85.36\% for BHCR-CNN \citep{ref7} and 90.33\% on CMATERdb 3.1.3.3 \citep{ref9}, through ImageNet-pretrained ResNet-50 at 96.12\% \citep{ref11} and InceptionResNetV2/DenseNet121 at 96.99\% \citep{ref12}, to 99.82\% for a squeeze-and-excitation ResNeXt on compound characters \citep{ref16}. Other work includes architecture benchmarks on CMATERdb \citep{ref8,ref58}, results on BanglaLekha-Isolated \citep{ref10}, a MobileNetV1 model \citep{ref13}, an 11-layer CNN at 98.03\% \citep{ref14}, Borno, trained on about one million images \citep{ref15}, the BanglaNet ensemble \citep{ref35}, VashaNet \citep{ref36}, and CharCrop-GAN, which adds GAN-based augmentation and the 81-class Bangla52 dataset \citep{ref37}. CNNs nonetheless overfit small, imbalanced Bengali datasets and confuse similar compounds \citep{ref17,ref23}.
 
-\hypertarget{cnn-based-deep-learning-approaches}{%
-\subsection{CNN-Based Deep Learning
-Approaches}\label{cnn-based-deep-learning-approaches}}
-CNNs dominated the field of Bengali HCR from about 2015.
-Accuracy levels kept rising: 85.36\% by early BHCR-CNN \citep{ref7};
-90.33\% by layer-wise DCNN on CMATERdb 3.1.3.3 (171 compound classes)
-\citep{ref9}, roughly 10 points higher than previous shallow SVM
-benchmarks; 91.23\% by DCNN on BanglaLekha-Isolated \citep{ref10};
-96.12\% in 47 epochs after ImageNet-pretrained ResNet-50 and transfer
-learning was employed \citep{ref11}; 96.99\% by
-InceptionResNetV2/DenseNet121 \citep{ref12}, and a more efficient
-MobileNetV1 was used on basic, compound and numeral character classes
-\citep{ref13}; 98.03\% by an 11-layer CNN \citep{ref14}; 92.61\% for
-Borno, using multiclass CNN training on about one million images
-\citep{ref15}; and 99.82\% by squeeze-and-excitation ResNeXt focused
-on compound characters \citep{ref16}. Alom et
-al.~\citeyearpar{ref8} benchmarked DenseNet, VGG, ResNet, FractalNet,
-All-Conv, and Network-in-Network on CMATERdb dataset, where DenseNet
-emerged as best; Chakraborty et al.~\citeyearpar{ref58} compared a simple
-CNN, deeper DCNN and VGG-16, where DCNN achieved 93.07\%. Among more
-recent CNN research we may mention BanglaNet, an ensemble of
-Inception/ResNet/DenseNet networks \citep{ref35}; VashaNet, which is a 26-layer CNN achieving 94.43--94.60\% accuracy in two datasets
-\citep{ref36}; and CharCrop-GAN, combining contour-based extraction with GAN-based data augmentation along with introducing the 81-class Bangla52 dataset consisting of 24,287 images \citep{ref37}. Despite all progress, CNN-based algorithms have shown their tendency for overfitting to small and imbalanced Bengali datasets, being expensive, and suffering from similar compound characters recognition \citep{ref17,ref23}.
+\subsection{Transformer Approaches}\label{transformer-approaches}
 
-\hypertarget{vision-transformer-and-transformer-based-approaches}{%
-\subsection{Vision Transformer and Transformer-Based
-Approaches}\label{vision-transformer-and-transformer-based-approaches}}
+The Vision Transformer (ViT) \citep{ref22} feeds 16$\times$16 image patches to a Transformer encoder. Its advantage over ResNet depends on pretraining scale: on ImageNet-1k alone ViT-Base trails a comparable ResNet, the two are comparable with ImageNet-21k, and ViT pulls ahead only with JFT-300M. Large-scale pretraining thus compensates for the convolutional inductive bias ViT lacks, which motivates transfer learning for low-resource scripts. Parvez et al.~\citeyearpar{ref17} compared ViT with VGG-16 and ResNet-50 on CMATERdb 3.1.2 (50 basic characters) and obtained 98.26\% against 94.54\% and 93.12\%, noting that ViT has not been systematically applied to Bangla characters.
 
-The foundational Vision Transformer (ViT) \citep{ref22} splits an image
-into fixed-size patches (typically 16×16 pixels) treated as tokens for a
-standard Transformer encoder. Dosovitskiy et al.\ show that ViT
-pretrained on JFT-300M outperforms ResNet baselines at lower
-pretraining compute (88.55\% top-1 on ImageNet, 94.55\% on CIFAR-100),
-but that this advantage is scale-dependent: on ImageNet-1k alone
-ViT-Base trails a comparably sized ResNet; with ImageNet-21k the two
-become comparable; only at JFT-300M scale does ViT's inductive-bias-free
-design pay off. This finding, that large-scale pretraining compensates
-for the convolutional inductive biases ViT lacks, directly motivates
-transfer-learning strategies for low-resource scripts such as Bengali.
+Other Bengali transformer work includes BornoViT, a 0.65M-parameter ViT pretrained on Ekush \citep{ref18}; ResViT, which fuses ResNet50v2 and ViT to reach 97.21\% on BanglaLekha-Isolated \citep{ref19}; and an eight-layer ViT evaluated on a 15,000-image CMATERdb subset \citep{ref38}. At the text level, GraDeT-HTR pairs a grapheme tokeniser with a decoder-only Transformer \citep{ref20}, a CRNN reaches CER 0.091 on BanglaWriting \citep{ref39}, and a TrOCR-style ViT encoder-decoder reaches CER 0.07 \citep{ref21}. The last is the closest ImageNet-pretrained ViT application to Bengali handwriting, but it works on words, not isolated compounds. Raquib et al.~\citeyearpar{ref25} fuse EfficientNetB3, ViT and a Conformer branch through cross-attention, reaching 98.84\% on their own 78-class dataset and 96.49\% on the external CHBCR benchmark. DeiT's data-efficient training \citep{ref41} and Swin's shifted-window attention \citep{ref42} are relevant to Bengali's limited labelled data. The Bengali hybrids \citep{ref19,ref25} run convolutional and attention branches in parallel.
 
-Parvez et al.~\citeyearpar{ref17} directly compared ViT against VGG-16
-and ResNet-50 on CMATERdb 3.1.2 (50 basic characters), with ViT reaching
-98.26\% against 94.54\% and 93.12\%, an advantage Parvez et al.\ attribute to ViT's global receptive field; they explicitly flag that ViT ``has not
-yet been systematically applied to Bangla handwritten characters'' as a
-critical gap. Other Bengali ViT work includes BornoViT, a lightweight
-(0.65M-parameter) ViT pretrained on Ekush for resource-constrained
-deployment \citep{ref18}; ResViT, which fuses ResNet50v2 and ViT
-backbones to reach 97.21\% on BanglaLekha-Isolated \citep{ref19}; and an
-eight-layer ViT-only model evaluated on a 15,000-image CMATERdb subset
-\citep{ref38}. At the text level, GraDeT-HTR combines a grapheme-based
-tokeniser with a decoder-only Transformer for state-of-the-art results
-on BN-HTRd and Bongabdo \citep{ref20}, and a CRNN with DenseNet121+GRU
-reaches CER 0.091 on BanglaWriting using a 72-basic-class tokeniser that
-excludes compound characters \citep{ref39}.
+\subsection{Compound Characters and Transfer Learning}\label{compound-characters}
 
-Most closely related to the present work, Hasan, Dhakal, Mehedi, and
-Rasel \citep{ref21} propose a TrOCR-style encoder-decoder, an
-ImageNet-pretrained ViT encoder with a multilingual text decoder,
-fine-tuned on BanglaWriting and a small Nepali dataset (CER 0.07 for
-Bengali). This is the closest existing application of an
-ImageNet-pretrained ViT to Bengali handwriting, but it operates at the
-word level rather than isolating compound-character classification.
-Raquib et al.~\citeyearpar{ref25} instead fuse EfficientNetB3, ViT, and a
-Conformer branch via cross-attention, reaching 98.84\% on their own
-78-class dataset and generalising to 96.49\% on the external CHBCR
-benchmark.
+Compound characters are consistently harder than basic ones. CompoundDenseNet reaches 98.5\%, 98\% and 96.2\% on BanglaLekha-Isolated, Ekush and CMATERdb, and its authors call for larger compound datasets \citep{ref23}. Confidence-guided diffusion augmentation gives at best 89.2\% (VGG16) on AIBengali \citep{ref24}. Shape decomposition shrinks the class count by splitting glyphs into components \citep{ref43}, and other approaches use two-phase pretraining \citep{ref35} or a HOG-CNN hybrid \citep{ref44}. Class balance varies: CMATERdb's compound set is unbalanced, while BanglaLekha-Isolated is near-uniform \citep{ref27}. ImageNet transfer is already common in Bengali HCR \citep{ref11,ref12,ref21}, although transfer-learned models can become biased toward source-domain features \citep{ref17}, one reason this study tests extended and hybrid ViT designs.
 
-Two further architectural extensions bear on the design that follows:
-DeiT's data-efficient training (RandAugment, Mixup, CutMix, and
-distillation against a CNN teacher) reaches 81.8\% top-1 on ImageNet-1k
-without web-scale pretraining \citep{ref41}, relevant given Bengali's
-limited labelled data; and the Swin Transformer's shifted-window
-attention achieves linear complexity in image size while remaining well
-suited to fine structural detail \citep{ref42}. Hybrid designs such as
-ResViT \citep{ref19} and the EfficientNetB3--ViT--Conformer model
-\citep{ref25} combine local convolutional features with global attention
-\emph{in parallel}.
+\subsection{Cross-Corpus Evaluation}\label{cross-corpus-literature}
 
-\hypertarget{compound-character-recognition}{%
-\subsection{Compound Character
-Recognition}\label{compound-character-recognition}}
+Most Bengali HCR studies train and test within a single corpus. Several report on multiple benchmarks, such as BanglaNet \citep{ref35}, CompoundDenseNet \citep{ref23} and Borno \citep{ref15}, but each corpus is trained and tested separately, which shows that an architecture works on several datasets and says nothing about transfer between them. The clearest held-out-corpus result is Raquib et al.~\citeyearpar{ref25}: 96.49\% on CHBCR against 98.84\% in-domain. A systematic train-on-one, test-on-another study across the major Bengali isolated-character corpora was not found in the reviewed literature, and Section 4.6 reports a very different picture when one is run.
 
-Studies consistently treat compound characters as a harder problem than basic characters. CompoundDenseNet, a modified DenseNet with enhanced feature reuse, reaches 98.5\%, 98\%, and 96.2\% on BanglaLekha-Isolated, Ekush, and CMATERdb respectively \citep{ref23}, and its authors call for larger and more diverse compound-character datasets. A confidence-guided diffusion augmentation pipeline improves ResNet50, DenseNet121, VGG16, and ViT backbones on the AIBengali dataset, but the best result (VGG16, 89.2\%) is notably lower than balanced-set results elsewhere \citep{ref24}. Shape-decomposition segmentation reduces the effective class count by splitting glyphs into shape components \citep{ref43}. Two other approaches are a two-phase pretrain-then-classify DCNN scheme \citep{ref35} and a HOG-CNN hybrid \citep{ref44}.
-
-The same four challenges recur across these studies. Conjuncts are structurally complex, since each combines two or more basic characters. Inter-class similarity is very high and the glyphs are morphologically diverse. Class imbalance is severe: CMATERdb's compound set is explicitly unbalanced, while BanglaLekha-Isolated has near-uniform classes \citep{ref27}. Finally, data across the 170+ compound classes is limited and fragmented.
-
-\hypertarget{imagenet-pretraining-and-transfer-learning-for-vision-transformers}{%
-\subsection{ImageNet Pretraining and Transfer Learning for Vision
-Transformers}\label{imagenet-pretraining-and-transfer-learning-for-vision-transformers}}
-
-ImageNet transfer learning is already common practice in Bengali HCR. An ImageNet-pretrained ResNet-50 reached 96.12\% in 47 epochs \citep{ref11}, and transfer learning with InceptionResNetV2 and DenseNet121 reached 96.99\% \citep{ref12}. The TrOCR-style system's ImageNet-pretrained ViT encoder \citep{ref21} applies the same idea to a transformer backbone. Data-efficient training strategies such as DeiT \citep{ref41} could help further with Bengali's data scarcity. One caveat recurs: transfer-learned models can become biased toward source-domain features, which may limit robustness to Bengali-specific script characteristics \citep{ref17}. That caveat is one reason this study tests extended and hybrid ViT designs instead of relying on off-the-shelf fine-tuning alone.
-
-\hypertarget{cross-dataset-evaluation-and-domain-generalisation}{%
-\subsection{Cross-Dataset Evaluation and Domain
-Generalisation}\label{cross-dataset-evaluation-and-domain-generalisation}}
-
-Most Bengali HCR studies train and evaluate \emph{within} a single corpus, drawing the train/test split from the same collection, so the reported accuracies describe within-corpus competence. Some studies do report results on several benchmarks: BanglaNet \citep{ref35} on CMATERdb, BanglaLekha-Isolated and Ekush; CompoundDenseNet \citep{ref23} on the same three, at 96.2--98.5\%; and Borno \citep{ref15}, trained on roughly one million images drawn from several datasets. In each case the model is trained and tested on each corpus separately. That is multi-benchmark \emph{reporting}. It shows an architecture works on several datasets when trained on each, and says nothing about whether a model trained on one generalises to another.
-
-Genuine held-out-corpus evaluation is rare. The clearest instance in the
-reviewed literature is Raquib et al.~\citeyearpar{ref25}, who train on their own
-78-class dataset and evaluate on the external CHBCR benchmark, reporting
-96.49\% against 98.84\% in-domain, a drop of roughly two points,
-which would suggest that cross-dataset transfer is largely intact. A
-systematic train-on-one, test-on-another study across
-the major Bengali isolated-character corpora was not identified in the reviewed literature, and Section 4.6 of this
-paper reports a substantially different picture when one is run.
-
-The wider computer-vision literature has long held that dataset-specific
-bias inflates within-dataset performance. Torralba and Efros \citeyearpar{ref45}
-showed that a classifier can identify which of several standard datasets
-an image came from with high accuracy, a direct demonstration that
-datasets carry signatures unrelated to their nominal content, and
-that models trained on one dataset degrade markedly when evaluated on
-another purporting to cover the same categories. Recht et al.~\citeyearpar{ref46}
-found measurable accuracy drops for ImageNet classifiers on a newly
-collected test set constructed to follow the original protocol,
-indicating that even careful replication of a collection procedure
-shifts the distribution. Domain adaptation theory \citep{ref47} formalises
-this: generalisation error on a target domain is bounded by source error
-plus a divergence term between the domains, so arbitrarily low source
-error does not constrain target error when the divergence is large (see
-\citep{ref57} for a broader survey of the domain-generalisation
-literature).
-
-For handwriting specifically the sources of divergence are concrete and
-well understood: capture device and resolution, binarisation and ink
-polarity, writing instrument, paper, and, most importantly, the
-writer population, since each corpus recruits a distinct set of
-contributors with their own regional and generational script
-conventions. Section 3.2 documents exactly these differences among the
-three corpora merged here: RAS-Compound stores high-resolution binarised
-white-on-black glyphs, Ekush is natively 28×28, and MatriVasha is
-black-on-white.
-
-This gap is methodological. If within-corpus accuracy is the only metric the field reports, and it substantially overstates performance on newly collected handwriting, then a decade of reported improvements may partly reflect better fitting of corpus-specific signatures. Testing that requires held-out-corpus evaluation as a standard protocol. To the authors' knowledge it has not been applied systematically to Bengali compound characters, and Section 4.6 addresses it.
-
-Two points from the sections above shape the design that follows. First, Dosovitskiy et al.~\citeyearpar{ref22} show that ViT trails a comparably sized ResNet when trained on ImageNet-1k alone, becomes comparable with ImageNet-21k pretraining, and surpasses it only at JFT-300M scale. Large-scale pretraining outweighs inductive bias, so for a low-resource script a pure ViT is the \emph{least} favourable architecture unless a strong prior is supplied externally. Second, the hybrids that exist for Bengali, ResViT \citep{ref19} and the EfficientNetB3--ViT--Conformer of Raquib et al.~\citeyearpar{ref25}, run CNN and transformer branches \emph{in parallel} and fuse their outputs. ExtendedViT composes them \emph{serially}: convolution produces the token sequence that attention then operates over. The original ViT paper's appendix describes this variant, but it has not been evaluated on Bengali script.
+The wider vision literature has long held that dataset bias inflates within-dataset accuracy. Torralba and Efros \citeyearpar{ref45} showed that a classifier can identify which dataset an image came from, and that models degrade when moved to another dataset covering the same categories. Recht et al.~\citeyearpar{ref46} found accuracy drops for ImageNet classifiers on a new test set built to follow the original protocol. Domain adaptation theory \citep{ref47} bounds target error by source error plus a divergence term, so low source error says little when the domains differ (see \citep{ref57} for a survey). For handwriting the sources of divergence are concrete: capture device and resolution, binarisation and ink polarity, writing instrument, and above all the writer population. Section 3.2 documents these differences among the three corpora merged here: RAS-Compound stores high-resolution, binarised white-on-black glyphs, Ekush is natively 28$\times$28, and MatriVasha is black-on-white. If within-corpus accuracy is the only reported metric, a decade of improvements may partly reflect better fitting of corpus-specific signatures.
 
 \hypertarget{summary-of-benchmark-datasets}{%
 \subsection{Summary of Benchmark
@@ -293,8 +150,7 @@ Table 2 consolidates representative methods discussed above alongside
 their architectural category, dataset, and reported performance. Because
 datasets, class counts, and evaluation protocols differ substantially
 across studies, these figures should be interpreted as within-study
-results rather than a directly comparable leaderboard (see Section
-2.11).
+results rather than a directly comparable leaderboard.
 
 \begin{table*}[htbp]
 \centering
@@ -372,91 +228,11 @@ tokeniser + patch-embed decoder & BN-HTRd / Bongabdo & State of the art
 \hypertarget{research-gaps}{%
 \subsection{Research Gaps}\label{research-gaps}}
 
-Synthesising the studies reviewed above, seven overarching gaps emerge
-that motivate this study.
+Four gaps motivate this study. First, transformer work on Bengali targets basic characters or digits \citep{ref17,ref18,ref19,ref38} or operates at the word or line level \citep{ref20,ref39,ref21}, so isolated compound-character classification is under-explored. Second, imbalance and scarcity for compound characters are handled by ad hoc augmentation \citep{ref37,ref24} rather than principled transfer learning, and transfer-learned models risk bias toward source-domain features \citep{ref17}. Third, the field values efficiency for low-resource deployment \citep{ref18,ref20}, so any proposed architecture should be judged on cost as well as accuracy. Fourth, and closest to this paper, no systematic cross-corpus evaluation exists for Bengali handwritten characters, which leaves open whether reported accuracies reflect character recognition or corpus familiarity (Section 4.6).
 
-First, ViT remains under-applied to compound characters. It excels on
-basic characters, reaching 98.26\% accuracy \citep{ref17}, but has rarely
-been applied systematically to Bengali, and almost never to isolated
-compound characters specifically; Parvez et al.~\citeyearpar{ref17} explicitly
-describe this as a critical research gap.
+The architectural gap follows from the transformer literature. Since ViT trails a comparably sized ResNet when pretrained on ImageNet-1k alone \citep{ref22}, a pure ViT is the least favourable choice for a low-resource script unless a strong prior is supplied. The existing Bengali hybrids \citep{ref19,ref25} fuse parallel CNN and transformer branches. ExtendedViT instead composes them serially, so that convolution produces the token sequence that attention then operates on. The original ViT paper describes this variant \citep{ref22}, but it had not been evaluated on Bengali script. Section 4 reports that, on this benchmark, the hybrid does not deliver an accuracy advantage over its own convolutional trunk.
 
-Second, existing transformer work exhibits a basic-character bias.
-BornoViT \citep{ref18}, ResViT \citep{ref19}, and the eight-layer ViT model
-\citep{ref38} target basic characters or digits, while GraDeT-HTR \citep{ref20},
-the CRNN of Safir et al.~\citeyearpar{ref39}, and the TrOCR-style ViT of Hasan et
-al.~\citeyearpar{ref21} operate at the word or line level, leaving isolated
-compound-character classification comparatively under-explored.
-
-Third, class imbalance and data scarcity for compound characters are
-addressed through ad hoc augmentation (GAN-based \citep{ref37} or
-diffusion-based \citep{ref24}) rather than through principled transfer
-learning, leaving open whether principled transfer learning offers a stronger prior for the long tail of rare conjunct classes.
-
-Fourth, transfer-learning studies specifically for Bengali compound
-characters are scarce. ImageNet transfer is well established for CNNs
-\citep{ref11,ref12} and for word-level ViT encoders \citep{ref21}, but not for
-compound-character ViT classification, and existing transfer-learned
-models have been noted to risk bias toward source-domain features
-\citep{ref17}, which motivated testing an extended rather than vanilla ViT design here.
-
-Fifth, the field values efficiency alongside accuracy for low-resource
-deployment, as demonstrated by BornoViT \citep{ref18} and GraDeT-HTR
-\citep{ref20}; any architecture proposed for compound characters should therefore be evaluated on parameter and computational cost as well as accuracy.
-
-Sixth, no existing extended or hybrid ViT architecture has been
-specifically tailored to compound-character structural complexity with
-ImageNet initialisation, despite the availability of relevant building
-blocks such as hybrid CNN--ViT designs \citep{ref19,ref25} and
-multi-scale hierarchical transformers \citep{ref42}.
-
-Seventh, and closest to this paper's own contribution: \emph{no
-systematic cross-corpus evaluation exists for Bengali handwritten
-characters.} Multi-benchmark reporting is common (Section 2.7), but
-train-on-one/test-on-another transfer is essentially unmeasured, leaving
-open whether reported accuracies reflect character recognition or corpus
-familiarity. Section 4.6 addresses this gap directly.
-
-\hypertarget{summary}{%
-\subsection{Summary}\label{summary}}
-
-The reviewed literature traces a clear trajectory in Bengali handwritten
-character recognition: from handcrafted-feature classifiers (MQDF and
-quad-tree or longest-run features combined with SVM or MLP classifiers,
-achieving roughly 79--87\% on compound characters \citep{ref1,ref2,ref3,ref4,ref5,ref6}),
-through deep CNNs and ensembles (DenseNet, ResNet, Inception,
-MobileNet, and SE-ResNeXt architectures, reaching 90--99.8\% depending
-on dataset balance \citep{ref7,ref8,ref9,ref10,ref11,ref12,ref13,ref14,ref15,ref16,ref23}), to an emerging Vision
-Transformer and hybrid-attention era in which ViT now outperforms
-leading CNNs on standard basic-character benchmarks (98.26\% versus
-93--95\%) \citep{ref17}, and in which lightweight, grapheme-aware, and
-TrOCR-style transformer systems demonstrate the paradigm's breadth
-\citep{ref18,ref19,ref20,ref21,ref25}.
-
-Compound characters, however, remain the field's frontier: they are
-structurally complex, mutually confusable, imbalanced, and comparatively
-data-scarce, and no prior study combines the three elements central to
-the present work: ImageNet pretraining, an extended or hybrid ViT
-architecture, and an explicit focus on compound characters. The
-theoretical grounding for ViT transfer learning, whereby large-scale
-pretraining compensates for the inductive biases ViT lacks \citep{ref22},
-together with the demonstrated success of ImageNet transfer in Bengali
-CNNs \citep{ref11,ref12} and word-level ViT-based OCR \citep{ref21}, and the
-data-efficiency techniques offered by DeiT \citep{ref41} and the multi-scale
-attention of Swin Transformer \citep{ref42}, collectively motivated the direction tested in this study. Section 4 reports that, on this benchmark, the hybrid does not deliver an accuracy advantage over its own convolutional trunk.
-
-It is worth noting that reported accuracies across the studies discussed
-are not directly comparable, owing to differences in datasets (CMATERdb,
-BanglaLekha-Isolated, Ekush), class counts (ranging from 50 to 231
-classes), train/test splits, image resolutions, and whether numerals and
-modifiers are included; the figures in Table 2 should therefore be
-read as within-study results rather than a ranked comparison. Several
-sources reviewed are non-peer-reviewed preprints, including BornoViT
-\citep{ref18}, the multi-head attention model \citep{ref25}, the confidence-guided
-diffusion paper \citep{ref24}, and the Bengali/Nepali TrOCR work \citep{ref21},
-whose reported figures await peer validation. As established in Section
-2.7, none of this prior work measures transfer \emph{across} corpora,
-which is where the present paper departs from it.
+Reported accuracies across the studies above are not directly comparable, because datasets (CMATERdb, BanglaLekha-Isolated, Ekush), class counts (50 to 231), splits, resolutions and the treatment of numerals and modifiers all differ. The figures in Table 2 are within-study results, not a ranked comparison. Several sources are non-peer-reviewed preprints, including BornoViT \citep{ref18}, the multi-head attention model \citep{ref25}, the diffusion-augmentation paper \citep{ref24} and the Bengali/Nepali TrOCR work \citep{ref21}, and their figures await peer validation.
 
 
 \hypertarget{methodology}{%
