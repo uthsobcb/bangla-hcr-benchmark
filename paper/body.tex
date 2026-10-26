@@ -33,8 +33,7 @@ connected: the benchmark is what made the remaining three measurable.
 \textbf{Unified benchmark.} RAS-Compound, Ekush, and MatriVasha are combined into one
 corpus, which has 256 classes and 681,309 images due to the correspondence of labels on the level of Unicode-normalized graphemes of
 Bengali script, instead of dataset-specific folder structure (Section 3.2). To the authors' knowledge, this is the largest unified set of isolated Bengali characters assembled for compound-character classification.
-This paper offers not only a compilation of the corpus, but also a characterization of it,
-as the imbalance stems from the size of the source, not character frequencies (Section 3.2), but the most significant finding of this work is that models trained on any of the corpora transfer to another \emph{at chance} (Section 4.6). Thus, none of Bengali corpora is capable of training a generalized model, and the merging should be re-interpreted as domain coverage.
+The corpus is also characterised: its imbalance stems from source size, not character frequency (Section 3.2), and models trained on any one corpus transfer to another \emph{at chance} (Section 4.6), so merging should be read as extending domain coverage, not as a route to a generalised model.
 
 \textbf{Four architectures under one protocol.} A from-scratch CNN, a
 fine-tuned ImageNet ResNet18, a fine-tuned ViT-B/16, and the hybrid architecture, all
@@ -254,13 +253,7 @@ shared test set.
 reconciliation, one shared split, four architectures, one test set.}
 \end{figure}
 
-The pipeline is deliberately organised so that every architecture
-consumes byte-identical data. Dataset scanning, label reconciliation,
-splitting, and image transformation are implemented once and shared; the
-architecture is the only variable that changes between runs. This
-matters because the comparisons in Sections 4.2--4.4 turn on differences of one
-to two accuracy points, which are easily manufactured by an inconsistent
-split.
+Dataset scanning, label reconciliation, splitting, and image transformation are implemented once and shared, so the architecture is the only variable between runs. This matters because the comparisons in Sections 4.2--4.4 turn on differences of one to two accuracy points, which an inconsistent split could easily manufacture.
 
 \hypertarget{dataset}{%
 \subsection{Dataset}\label{dataset}}
@@ -321,15 +314,7 @@ encoded with different code-point sequences across projects; without
 normalisation, visually and semantically identical characters would
 occupy separate classes.
 
-Figure 2 shows (a) the sorted per-class frequency curve on a
-log axis and (b) the relative contribution of each source.
-Figure 3 shows the same three characters as collected by each
-corpus, and makes the heterogeneity concrete: RAS-Compound stores
-high-resolution white-on-black binarised glyphs, Ekush is natively 28×28
-and visibly pixelated when upsampled, and MatriVasha is
-\emph{black-on-white}, the opposite ink polarity. Any merge of
-these three must reconcile that variation before a single model can
-consume them, which is the subject of the next section.
+Figure 2 shows the per-class frequency curve and each source's contribution. Figure 3 shows the heterogeneity: RAS-Compound stores high-resolution white-on-black binarised glyphs, Ekush is natively 28×28, and MatriVasha has the opposite ink polarity, which any merge must reconcile before a single model can consume the data.
 
 \begin{figure}
 \centering
@@ -346,49 +331,13 @@ corpus. Note the resolution difference and MatriVasha's inverted ink
 polarity.}
 \end{figure}
 
-\textbf{Class imbalance.} Class frequencies range from 59 to 5,740
-images with a median of 2,636. The distribution is not Zipfian, as might
-be expected from natural Bengali text frequency \citep{ref33}, but sharply
-\emph{bimodal}: 229 classes form a broad, comparatively flat body
-between roughly 2,000 and 5,700 samples, and the remaining 27 fall off a
-cliff to fewer than 100 (Figure 2a). Those 27 are exactly the classes
-contributed uniquely by RAS-Compound, whose 7,830 images spread across
-119 classes average only 66 per class.
-
-\textbf{Source of the imbalance.} The imbalance is an artifact of source size, not of character frequency. Each corpus is internally near-balanced: within Ekush,
-per-class counts run from 514 to 4,067 with an interquartile range of
-just 3,056--3,079; within MatriVasha, 2,548--2,563; within RAS-Compound,
-a uniform 34--70. The bimodality in Figure 2(a) therefore arises
-entirely from RAS-Compound being a small collection (\ensuremath{\approx}66 images per
-class) whose 27 unique classes no other corpus supplies, not from
-those conjuncts being intrinsically rarer in written Bengali.
-
-This distinction matters for interpreting any per-class result. Because
-class rarity and source identity are perfectly confounded in this corpus
-(every low-frequency class is a RAS-Compound class, and RAS-Compound
-has a distinctive image convention: high-resolution, cleanly binarised),
-a model that performs better on rare classes cannot be shown to
-handle \emph{rarity} better rather than simply handling \emph{that
-corpus's image style} better. This paper therefore does not claim rare-class
-advantage for any architecture, and reports macro-averaged F1
-alongside accuracy as a descriptive statistic rather than as evidence
-about the long tail. Establishing genuine data-efficiency behaviour
-requires controlled subsampling within a single source (Section 4.4).
+\textbf{Class imbalance.} Class frequencies range from 59 to 5,740 images with a median of 2,636. The distribution is sharply bimodal rather than Zipfian \citep{ref33}: 229 classes lie between roughly 2,000 and 5,700 samples and the remaining 27 fall below 100 (Figure 2a). Those 27 are exactly the classes contributed only by RAS-Compound, whose 7,830 images over 119 classes average 66 per class. The imbalance is an artifact of source size, not of character frequency: each corpus is internally near-balanced (Ekush interquartile range 3,056--3,079, MatriVasha 2,548--2,563, RAS-Compound a uniform 34--70). Because rarity and source identity are perfectly confounded, and RAS-Compound has a distinctive image convention, better rare-class performance cannot be attributed to handling rarity rather than that corpus's image style. This paper therefore claims no rare-class advantage for any architecture and reports macro-F1 only as a descriptive statistic. Genuine data-efficiency behaviour requires controlled subsampling within a single source (Section 4.4).
 
 \hypertarget{preprocessing-and-data-splitting}{%
 \subsection{Preprocessing and Data
 Splitting}\label{preprocessing-and-data-splitting}}
 
-\textbf{Polarity normalisation.} As Figure 3 shows, the three sources do
-not agree on ink polarity: RAS-Compound and Ekush store light ink on a
-dark ground, MatriVasha the inverse. Left unaddressed, the same
-character would present to the network as two different visual patterns
-depending on its source, and the model would be forced to learn each
-convention separately. Polarity is normalised by comparing the mean intensity of the image border against the global mean and inverting when the border is brighter, which yields bright ink on a dark ground regardless of
-source convention. This is applied before all other transformations.
-Figure 4 traces one glyph per source through normalisation and
-three augmentation draws; the MatriVasha row shows the inversion taking
-effect.
+\textbf{Polarity normalisation.} As Figure 3 shows, RAS-Compound and Ekush store light ink on a dark ground and MatriVasha the inverse, so without normalisation the same character would present to the network as two different patterns. Polarity is normalised by comparing the mean intensity of the image border against the global mean and inverting when the border is brighter, which yields bright ink on a dark ground. This is applied before all other transformations. Figure 4 traces one glyph per source through normalisation and three augmentation draws.
 
 \begin{figure}
 \centering
@@ -406,7 +355,7 @@ excluded: Bengali characters are direction-sensitive and a mirrored
 glyph is not a valid sample of its own class. All images are normalised
 to zero mean and unit variance per channel using μ = σ = 0.5.
 
-\textbf{Splitting.} The data are split 80/10/10, stratified per class with a fixed seed, so that rare classes are represented in all
+\textbf{Splitting.} The data are split 80/10/10, stratified per class with a fixed seed (42), so that rare classes are represented in all
 three partitions rather than concentrated in whichever partition chance
 assigns them. Classes with fewer than three samples contribute entirely
 to training. The full corpus yields 545,289 training, 68,010 validation,
@@ -1154,8 +1103,7 @@ accuracy points; the difference between evaluating within a corpus and
 across corpora is ninety. Any conclusion about which architecture is
 best for Bengali compound characters is therefore conditional on a fixed
 collection convention, and would need re-establishing on data collected
-differently. This comes before the architecture results because it limits
-how much weight they can carry.
+differently.
 
 \textbf{Accuracy.} This study set out expecting the hybrid to be more accurate than a convolutional baseline
 when data is limited. That expectation was not met. Across a controlled sweep with the sole
@@ -1189,15 +1137,7 @@ smaller class inventories than the 256 used here.
 
 \textbf{Threats to validity.}
 
-\emph{Initialisation contamination.} Both pretrained models initially inherited previously trained Bengali weights (ResNet18 from a
-RAS-only checkpoint, ExtendedViT from the full-corpus ResNet18), which
-invalidated the first equal-budget comparison. Removing that inheritance
-lowers ExtendedViT's first-epoch validation accuracy from 0.953 to 0.867. Every number
-in Sections 4.4 and 4.5 comes from runs initialised from ImageNet alone.
-Table 5 retains the inherited initialisation for ResNet18 and is
-annotated accordingly; it should be read as an upper bound for that
-baseline rather than as a controlled comparison. The equal-budget
-ResNet18 result in Table 6 was rerun from ImageNet alone (Section 4.3).
+\emph{Initialisation contamination.} Both pretrained models initially inherited previously trained Bengali weights, which invalidated the first equal-budget comparison; removing the inheritance lowers ExtendedViT's first-epoch validation accuracy from 0.953 to 0.867. Every number in Sections 4.4 and 4.5, and the equal-budget ResNet18 result in Table 6 (Section 4.3), comes from ImageNet-only runs. Table 5 retains ResNet18's inherited initialisation and should be read as an upper bound for that baseline.
 
 \emph{Seeds and statistical power.} Three seeds establish that the
 accuracy differences are not significant and that the calibration
@@ -1250,15 +1190,7 @@ scaling, a property of the training recipe rather than the
 architecture. ViT-B/16 is the most accurate model at an equal budget, at
 3.6× the parameters and 3.4× the inference cost of the hybrid.
 
-Three methodological cautions follow, each discovered by attempting to
-falsify a claim made in this paper: warm-starting from a previously
-trained checkpoint, routine in this literature, inflated the
-equal-budget result by 1.43 accuracy points; macro-F1 does not measure
-long-tail performance on this corpus, since rarity is confounded with
-source image quality; and architecture-level calibration comparisons
-should always be reported temperature-scaled. Transfer learning also makes the minority corpus's 27
-otherwise-unavailable classes learnable: without pretraining, a scratch CNN reaches
-0.0129 accuracy on that corpus against 0.707 on the largest.
+Three methodological cautions follow: warm-starting from a previously trained checkpoint inflated the equal-budget result by 1.43 accuracy points; macro-F1 does not measure long-tail performance here, since rarity is confounded with source image quality; and calibration comparisons across architectures should be reported temperature-scaled. Transfer learning also makes the minority corpus's 27 otherwise-unavailable classes learnable: without pretraining, a scratch CNN reaches 0.0129 accuracy on that corpus against 0.707 on the largest.
 
 Future work follows directly from the cross-corpus result. The field
 needs domain-invariant representations for handwritten Bengali, since
@@ -1273,13 +1205,6 @@ accuracy-per-millisecond frontier for CPU-only deployment remains open.
 
 \hypertarget{reproducibility}{%
 \section{Reproducibility}\label{reproducibility}}
-
-All results are produced by a single codebase in which dataset scanning,
-label reconciliation, splitting, and image transformation are shared
-across architectures; only the model varies. The train/validation/test
-partition is derived deterministically from a fixed seed (42) applied to
-a per-class shuffle, so the partition is identical for every run
-reported here and can be regenerated exactly.
 
 \begin{table*}[htbp]
 \centering
@@ -1335,11 +1260,6 @@ python paper/figures.py
 \end{verbatim}
 \caption{Commands to reproduce every result.}
 \end{figure*}
-
-Code, trained checkpoints, and the label-reconciliation mapping files
-are available at the repository named in the Code Availability statement
-below.
-
 
 \hypertarget{declarations}{%
 \section{Declarations}\label{declarations}}
