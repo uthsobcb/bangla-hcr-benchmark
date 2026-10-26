@@ -1074,21 +1074,7 @@ check on the formulation given in Section 3.4.
 \hypertarget{ablation-studies}{%
 \subsection{Ablation Studies}\label{ablation-studies}}
 
-\textbf{Backbone initialisation.} Holding everything else fixed,
-initialising ExtendedViT's trunk from ImageNet rather than from the
-full-corpus ResNet18 checkpoint costs 1.43 accuracy points at the
-equal-budget setting (0.9719 \ensuremath{\rightarrow} 0.9576). The inherited trunk had seen the
-entire corpus, so that 1.43-point difference measures leaked information
-rather than architecture. The equivalent inheritance in ResNet18,
-from a RAS-only checkpoint, changed its equal-budget accuracy by only 0.15
-points (0.9544 inherited, 0.9529 from ImageNet alone; Section 4.3).
-Sections 4.4 and 4.5
-use ImageNet initialisation throughout for both architectures.
-
-\textbf{Temperature scaling.} As reported in Section 4.5, a single
-scalar fitted on validation data removes the calibration difference
-between architectures entirely. This was the decisive control for the
-paper's remaining architectural claim, and it did not survive it.
+Initialising ExtendedViT's trunk from ImageNet rather than from the full-corpus ResNet18 checkpoint costs 1.43 accuracy points at the equal budget (0.9719 \ensuremath{\rightarrow} 0.9576), against 0.15 points for ResNet18 (Section 4.3), and temperature scaling removes the calibration difference between architectures (Section 4.5). The details are in Appendix E.
 
 \hypertarget{comparison-with-prior-published-results}{%
 \subsection{Comparison with Prior Published
@@ -1155,77 +1141,7 @@ claim state of the art.
 \subsection{Per-Source and Per-Class
 Analysis}\label{per-source-and-per-class-analysis}}
 
-Per-source accuracy is reported in Table 5. Both pretrained models run on the full corpus score highest on RAS-Compound (0.991--0.994) and lowest on Ekush
-(0.974), the reverse of what corpus size alone would predict:
-RAS-Compound is the smallest source but has the cleanest,
-highest-resolution binarised glyphs, while Ekush is natively 28×28.
-Image quality dominates corpus size here. The scratch CNN inverts this
-completely (0.013 on RAS-Compound, 0.707 on Ekush), because without a
-pretrained prior it learns only what it sees in quantity.
-
-\textbf{Rare classes.} The rarest classes are the easiest, not the hardest. The 27 classes
-with fewer than 100 images reach a mean per-class F1 of 0.9966
-(ExtendedViT; 0.9925 for ResNet18) against 0.9758 for the 229
-well-populated classes. This inverts the
-usual expectation and follows directly from the confound established in
-Section 3.2: those 27 classes are contributed solely by RAS-Compound,
-whose images are high-resolution and cleanly binarised, and no other
-corpus supplies a competing rendering of them. Their scarcity is an
-artifact of source size, while their separability comes from image
-quality. On this benchmark, therefore, \emph{macro-F1 does not measure
-long-tail performance}, and neither macro-F1 nor per-class accuracy
-should be read as evidence about rare conjuncts. This paper reports macro-F1 as a
-descriptive statistic only.
-
-\textbf{Confusions.} Errors concentrate on minimally different conjunct pairs. Only
-7 of 256 classes fall below F1 0.90 for ExtendedViT (6 for ResNet18). The most-confused pairs are
-near-identical, and both architectures fail on essentially the same
-ones (Table 12):
-
-\begin{table*}[htbp]
-\centering
-\footnotesize
-\caption{Most-confused class pairs, full corpus (Extended\-Vi\-T /
-ResNet18 error counts).}
-\begin{tabular}{lrrl}
-\toprule
-True \ensuremath{\rightarrow} Predicted & Extended\-Vi\-T & ResNet18 & What differs \\
-\midrule
-\bn{ন্ড্র} \ensuremath{\rightarrow} \bn{ণ্ড্র} & 33 & 25 & dental \bn{ন} vs retroflex \bn{ণ} \\
-\bn{ণ্ড্র} \ensuremath{\rightarrow} \bn{ন্ড্র} & 24 & 28 & the same pair, reversed \\
-\bn{ম্ভ্র} \ensuremath{\rightarrow} \bn{ন্ত্র} & 32 & 26 & both components \\
-\bn{ত্ত} \ensuremath{\rightarrow} \bn{ও} & 25 & 26 & conjunct resembling a vowel \\
-\bn{ম্ন} \ensuremath{\rightarrow} \bn{ম্ম} & 19 & 19 & \bn{ন} vs \bn{ম} as second component \\
-\bn{ন্ঢ} \ensuremath{\rightarrow} \bn{ন্ট} & 15 & 16 & \bn{ঢ} vs \bn{ট} \\
-\bn{শ্ন} \ensuremath{\rightarrow} \bn{শ্ম} & 12 & 13 & \bn{ন} vs \bn{ম} as second component \\
-\bn{ন্ব} \ensuremath{\rightarrow} \bn{ণ্ব} & 12 & 12 & dental \bn{ন} vs retroflex \bn{ণ} \\
-\bn{ত্থ} \ensuremath{\rightarrow} \bn{থ} & 12 & 11 & conjunct vs its own second component \\
-\bn{২} \ensuremath{\rightarrow} \bn{হ} & 13 & 13 & digit against a consonant \\
-\bottomrule
-\end{tabular}
-\end{table*}
-
-
-Three systematic patterns emerge. First, the \emph{dental/retroflex
-nasal contrast} (\bn{ন} vs \bn{ণ}) accounts for the single largest error source,
-and it is symmetric: the confusion runs in both directions,
-indicating genuine visual ambiguity rather than a class prior. The
-worst-performing classes overall are exactly this pair, \bn{ন্ড্র} (F1
-0.8652 for ExtendedViT) and \bn{ণ্ড্র} (F1 0.8781), the two halves of the same confusion.
-Second,
-\emph{\bn{ন} vs \bn{ম} as a second component} recurs across otherwise unrelated
-conjuncts. Third, conjuncts are confused with \emph{their own
-constituents} (\bn{ত্থ} \ensuremath{\rightarrow} \bn{থ}) or with visually similar non-conjuncts (\bn{ত্ত} \ensuremath{\rightarrow} \bn{ও}, \bn{২}
-\ensuremath{\rightarrow} \bn{হ}), which is a failure of compositional structure rather than of
-stroke detection.
-
-That both architectures fail on the same pairs, in similar proportions,
-indicates these errors are properties of the data rather than of the
-model, consistent with the near-identical aggregate accuracies of
-Table 5, and with the inter-class similarity the literature identifies
-as the field's persistent obstacle \citep{ref17,ref23,ref32}. Full
-per-class results are in Appendix C; confusion matrices are
-supplementary material.
+Per-source accuracy is in Table 5. Both pretrained models score highest on RAS-Compound (0.991--0.994) and lowest on Ekush (0.974), so image quality outweighs corpus size. The rarest classes are the easiest: the 27 classes with fewer than 100 images reach a mean per-class F1 of 0.9966 (ExtendedViT) against 0.9758 for the 229 well-populated classes, because they come only from RAS-Compound's clean glyphs. Macro-F1 therefore does not measure long-tail performance on this benchmark and is reported descriptively only. The remaining errors concentrate on minimally different conjunct pairs, chiefly the dental/retroflex nasal contrast, and both architectures fail on the same pairs. The analysis, including the most-confused pairs, is in Appendix D.
 
 
 \hypertarget{discussion}{%
@@ -1368,7 +1284,7 @@ reported here and can be regenerated exactly.
 \begin{table*}[htbp]
 \centering
 \footnotesize
-\caption{Complete training configuration.}
+\caption{Complete training configuration.}\label{tab:config}
 \begin{tabular}{>{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}}
 \toprule
@@ -1401,7 +1317,7 @@ Inference measurement & Apple M4 CPU, single image, one thread \\
 \end{table*}
 
 
-Table 13 gives the complete training configuration, and Figure 12 lists the commands that reproduce every result.
+Table~\ref{tab:config} gives the complete training configuration, and Figure 12 lists the commands that reproduce every result.
 
 \begin{figure*}[htbp]
 \centering
@@ -1518,5 +1434,99 @@ complete ranked confusion lists are released as
 Summary: 27 classes at F1 = 1.000 (ExtendedViT) and 25 (ResNet18); 7 and
 6 classes respectively below F1 0.90; worst classes (ExtendedViT) \bn{ন্ড্র} (0.8652) and \bn{ণ্ড্র}
 (0.8781), the two halves of the same dental/retroflex confusion
-discussed in Section 4.11.
+discussed in Appendix D.
 
+\section{Per-Source and Per-Class Analysis}\label{appendix-d}
+
+}
+
+Per-source accuracy is reported in Table 5. Both pretrained models run on the full corpus score highest on RAS-Compound (0.991--0.994) and lowest on Ekush
+(0.974), the reverse of what corpus size alone would predict:
+RAS-Compound is the smallest source but has the cleanest,
+highest-resolution binarised glyphs, while Ekush is natively 28×28.
+Image quality dominates corpus size here. The scratch CNN inverts this
+completely (0.013 on RAS-Compound, 0.707 on Ekush), because without a
+pretrained prior it learns only what it sees in quantity.
+
+\textbf{Rare classes.} The rarest classes are the easiest, not the hardest. The 27 classes
+with fewer than 100 images reach a mean per-class F1 of 0.9966
+(ExtendedViT; 0.9925 for ResNet18) against 0.9758 for the 229
+well-populated classes. This inverts the
+usual expectation and follows directly from the confound established in
+Section 3.2: those 27 classes are contributed solely by RAS-Compound,
+whose images are high-resolution and cleanly binarised, and no other
+corpus supplies a competing rendering of them. Their scarcity is an
+artifact of source size, while their separability comes from image
+quality. On this benchmark, therefore, \emph{macro-F1 does not measure
+long-tail performance}, and neither macro-F1 nor per-class accuracy
+should be read as evidence about rare conjuncts. This paper reports macro-F1 as a
+descriptive statistic only.
+
+\textbf{Confusions.} Errors concentrate on minimally different conjunct pairs. Only
+7 of 256 classes fall below F1 0.90 for ExtendedViT (6 for ResNet18). The most-confused pairs are
+near-identical, and both architectures fail on essentially the same
+ones (Table~\ref{tab:confusions}):
+
+\begin{table*}[htbp]
+\centering
+\footnotesize
+\caption{Most-confused class pairs, full corpus (Extended\-Vi\-T /
+ResNet18 error counts).}\label{tab:confusions}
+\begin{tabular}{lrrl}
+\toprule
+True \ensuremath{\rightarrow} Predicted & Extended\-Vi\-T & ResNet18 & What differs \\
+\midrule
+\bn{ন্ড্র} \ensuremath{\rightarrow} \bn{ণ্ড্র} & 33 & 25 & dental \bn{ন} vs retroflex \bn{ণ} \\
+\bn{ণ্ড্র} \ensuremath{\rightarrow} \bn{ন্ড্র} & 24 & 28 & the same pair, reversed \\
+\bn{ম্ভ্র} \ensuremath{\rightarrow} \bn{ন্ত্র} & 32 & 26 & both components \\
+\bn{ত্ত} \ensuremath{\rightarrow} \bn{ও} & 25 & 26 & conjunct resembling a vowel \\
+\bn{ম্ন} \ensuremath{\rightarrow} \bn{ম্ম} & 19 & 19 & \bn{ন} vs \bn{ম} as second component \\
+\bn{ন্ঢ} \ensuremath{\rightarrow} \bn{ন্ট} & 15 & 16 & \bn{ঢ} vs \bn{ট} \\
+\bn{শ্ন} \ensuremath{\rightarrow} \bn{শ্ম} & 12 & 13 & \bn{ন} vs \bn{ম} as second component \\
+\bn{ন্ব} \ensuremath{\rightarrow} \bn{ণ্ব} & 12 & 12 & dental \bn{ন} vs retroflex \bn{ণ} \\
+\bn{ত্থ} \ensuremath{\rightarrow} \bn{থ} & 12 & 11 & conjunct vs its own second component \\
+\bn{২} \ensuremath{\rightarrow} \bn{হ} & 13 & 13 & digit against a consonant \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+Three systematic patterns emerge. First, the \emph{dental/retroflex
+nasal contrast} (\bn{ন} vs \bn{ণ}) accounts for the single largest error source,
+and it is symmetric: the confusion runs in both directions,
+indicating genuine visual ambiguity rather than a class prior. The
+worst-performing classes overall are exactly this pair, \bn{ন্ড্র} (F1
+0.8652 for ExtendedViT) and \bn{ণ্ড্র} (F1 0.8781), the two halves of the same confusion.
+Second,
+\emph{\bn{ন} vs \bn{ম} as a second component} recurs across otherwise unrelated
+conjuncts. Third, conjuncts are confused with \emph{their own
+constituents} (\bn{ত্থ} \ensuremath{\rightarrow} \bn{থ}) or with visually similar non-conjuncts (\bn{ত্ত} \ensuremath{\rightarrow} \bn{ও}, \bn{২}
+\ensuremath{\rightarrow} \bn{হ}), which is a failure of compositional structure rather than of
+stroke detection.
+
+That both architectures fail on the same pairs, in similar proportions,
+indicates these errors are properties of the data rather than of the
+model, consistent with the near-identical aggregate accuracies of
+Table 5, and with the inter-class similarity the literature identifies
+as the field's persistent obstacle \citep{ref17,ref23,ref32}. Full
+per-class results are in Appendix C.
+
+\section{Ablation Studies}\label{appendix-e}
+
+}
+
+\textbf{Backbone initialisation.} Holding everything else fixed,
+initialising ExtendedViT's trunk from ImageNet rather than from the
+full-corpus ResNet18 checkpoint costs 1.43 accuracy points at the
+equal-budget setting (0.9719 \ensuremath{\rightarrow} 0.9576). The inherited trunk had seen the
+entire corpus, so that 1.43-point difference measures leaked information
+rather than architecture. The equivalent inheritance in ResNet18,
+from a RAS-only checkpoint, changed its equal-budget accuracy by only 0.15
+points (0.9544 inherited, 0.9529 from ImageNet alone; Section 4.3).
+Sections 4.4 and 4.5
+use ImageNet initialisation throughout for both architectures.
+
+\textbf{Temperature scaling.} As reported in Section 4.5, a single
+scalar fitted on validation data removes the calibration difference
+between architectures entirely. This was the decisive control for the
+paper's remaining architectural claim, and it did not survive it.
