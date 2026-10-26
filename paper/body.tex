@@ -33,7 +33,7 @@ connected: the benchmark is what made the remaining three measurable.
 \textbf{Unified benchmark.} RAS-Compound, Ekush, and MatriVasha are combined into one
 corpus, which has 256 classes and 681,309 images due to the correspondence of labels on the level of Unicode-normalized graphemes of
 Bengali script, instead of dataset-specific folder structure (Section 3.2). To the authors' knowledge, this is the largest unified set of isolated Bengali characters assembled for compound-character classification.
-The corpus is also characterised: its imbalance stems from source size, not character frequency (Section 3.2), and models trained on any one corpus transfer to another \emph{at chance} (Section 4.6), so merging should be read as extending domain coverage, not as a route to a generalised model.
+The corpus is also characterised: its imbalance stems from source size, not character frequency (Section 3.2), and the two models tested on a corpus they were not trained on score at about chance (Section 4.6), so merging should be read as extending domain coverage, not as a route to a generalised model.
 
 \textbf{Four architectures under one protocol.} A from-scratch CNN, a
 fine-tuned ImageNet ResNet18, a fine-tuned ViT-B/16, and the hybrid architecture, all
@@ -688,7 +688,7 @@ The final row is reported for transparency and \emph{excluded from
 comparison}: its backbone was initialised from a ResNet18 trained on the
 entire corpus, so it had access to data this setting withholds. Its
 0.9719 is not a valid equal-budget result, and the 1.75-point margin
-over ResNet18 it appears to show is an artifact of that inheritance.
+it showed over the first ResNet18 run (0.9544) is an artifact of that inheritance.
 
 All rows except the last are initialised from ImageNet alone: ResNet18
 (0.9529), ExtendedViT (0.9576), and ViT-B/16 (0.9662). ResNet18 was first
@@ -715,8 +715,8 @@ shown hatched and marked excluded.
 \begin{figure}
 \centering
 \includegraphics[width=0.85\linewidth]{fig7_results.png}
-\caption{Accuracy by method: 300 images per class (left bar)
-and the full corpus (right). The warm-started run is hatched and
+\caption{Best validation accuracy by method: 300 images per class (left bar)
+and the full corpus (right); Tables 5 and 6 report test accuracy. The warm-started run is hatched and
 excluded.}
 \end{figure}
 
@@ -935,8 +935,8 @@ Extended\-Vi\-T & RAS \ensuremath{\rightarrow} Ekush & 37 & 1.0000 & 0.0205 & 0.
 \end{table*}
 
 
-\textbf{Result.} Generalisation across corpora collapses to chance (Table 10). Every model
-scores 0.96--1.00 on its own corpus's held-out split and 0.021--0.055 on
+\textbf{Result.} Generalisation across corpora collapses to chance (Table 10). Both models
+score 0.96--1.00 on its own corpus's held-out split and 0.021--0.055 on
 another corpus's images of \emph{the same characters}, between 0.8×
 and 2.2× the chance rate of a 37- or 58-way classifier. The result holds
 in both directions, for both architectures, and across both corpus
@@ -1111,10 +1111,10 @@ variable being per-class budget, and with three seeds at the two
 smallest budgets, no accuracy difference reaches significance; at the
 two largest budgets ResNet18 is fractionally ahead. The alternative,
 presenting the single-seed +2.46 points at 50 images per class or the
-1.75-point margin from the contaminated warm-started run, would have
+1.75-point margin shown by the contaminated warm-started run, would have
 reported a finding that disappears under repetition and a proper control.
 
-\textbf{Calibration.} The encoder yields better-calibrated raw probabilities: roughly half ResNet18's expected calibration error at every budget, largest when data is scarcest and narrowing monotonically as data grows, with a separation an order of magnitude larger than seed variance. That difference is not architectural. A single temperature fitted on validation data removes it (Section 4.5), and a temperature-scaled ResNet18 is better calibrated than an unscaled ExtendedViT. The two architectures sit at different distances from calibration under the shared training recipe; attention does not confer better-calibrated posteriors that post-hoc scaling cannot supply.
+\textbf{Calibration.} The encoder yields better-calibrated raw probabilities: roughly half ResNet18's expected calibration error at the two smallest budgets, narrowing monotonically to 71\% of it at 1,000 images per class, with a separation an order of magnitude larger than seed variance. That difference is not architectural. A single temperature fitted on validation data removes it (Section 4.5), and a temperature-scaled ResNet18 is better calibrated than an unscaled ExtendedViT. The two architectures sit at different distances from calibration under the shared training recipe; attention does not confer better-calibrated posteriors that post-hoc scaling cannot supply.
 
 Why the raw gap arises is not established here. Both models are under-confident under label smoothing of 0.1, ResNet18 more so (0.638 mean confidence at 0.887 accuracy in one run at 50 images per class), and the fitted temperatures (0.552 against 0.749) quantify that difference. Whether it reflects the encoder's aggregation over the whole glyph or only a different interaction between each architecture and label smoothing would require a replication without smoothing; the attention maps of Section 4.8 are compatible with either account.
 
@@ -1176,7 +1176,7 @@ Unicode-normalised graphemes, and used it to evaluate four architectures
 under an identical protocol.
 
 The benchmark's main finding is negative: trained on one constituent corpus and
-tested on another, every architecture falls from 0.96--1.00 same-corpus
+tested on another, both architectures tested fall from 0.96--1.00 same-corpus
 accuracy to 0.02--0.05 cross-corpus, verified as domain shift rather
 than label disagreement (Section 4.6). A model trained on one Bengali
 corpus therefore learns only that corpus's rendering of compound
@@ -1277,8 +1277,7 @@ public datasets. Ekush \citep{ref29}, MatriVasha \citep{ref49}, and
 RAS-Compound \citep{ref50} are each described in peer-reviewed
 publications, in addition to RAS-Compound's own distribution as a
 Kaggle dataset. Their distribution terms are governed by each source's
-own licence; where the licence permits, the merged 256-class manifest
-itself is released alongside the reconciliation code. The
+own licence; the merged 256-class manifest, which lists file paths, labels, and split assignments only and redistributes no source images, is released alongside the reconciliation code (see Code availability). The
 label-reconciliation mapping files (\texttt{ras\_class\_mapping.csv},
 \texttt{matrivasha\_mapping.csv}) and the manifest-construction code
 that reproduces the unified corpus are released with this paper.
